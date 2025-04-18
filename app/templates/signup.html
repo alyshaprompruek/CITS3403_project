@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <title>Signup!</title>
+{% endblock %}
+
+{% block body %}
+    <div class="signup-container">
+        <form class="signup-form" action="/signup" method="POST">
+            {{ SignUpForm.hidden_tag() }}
+            <h2>Sign Up</h2>
+            <div>
+                {{ SignUpForm.email.label }}<br>
+                {{ SignUpForm.email(size=32) }}
+            </div>
+            <div>
+                {{ SignUpForm.password.label }}<br>
+                {{ SignUpForm.password(size=32) }}
+            </div>
+            <div>
+                {{ SignUpForm.role.label }}<br>
+                {{ SignUpForm.role(class_="select") }}
+            </div>
+            <div>
+                {{ SignUpForm.submit(class_="button") }}
+            </div>
+        </form>
+    </div>
+{% endblock %}

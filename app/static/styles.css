@@ -1,0 +1,214 @@
+/* Import the variables */
+@import url('./variables.css');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    font-family: var(--font-family); /* Apply the font-family globally */
+    font-size: var(--font-size);
+    background: var(--page-bg-color);
+    color: var(--text-color);
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1; /* Ensures the main content takes up available space */
+}
+
+/* Hero Section */
+.hero {
+    text-align: center;
+    padding: 6rem 2rem;
+    background: linear-gradient(135deg, var(--secondary-color), #ff9671);
+    color: var(--text-color);
+    animation: fadeIn 2s ease-in-out;
+    border-radius: 15px;
+    margin: 2rem;
+}
+
+.hero h1 {
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+    animation: slideInFromLeft 1.5s ease-out;
+}
+
+.hero p {
+    font-size: 1.3rem;
+    margin-bottom: 2.5rem;
+    animation: slideInFromRight 1.5s ease-out;
+}
+
+.hero a {
+    display: inline-block;
+    padding: 1rem 2.5rem;
+    font-size: 1.2rem;
+    color: var(--text-color);
+    background: var(--secondary-color);
+    border: none;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: transform 0.3s ease, background 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.hero a:hover {
+    transform: scale(1.1);
+    background: #4a47d5;
+}
+
+.PageLinks {
+    text-decoration: none; /* Remove underline from links */
+    color: var(--secondary-color);
+}
+
+.PageLinks:hover {
+    color: var(--secondary-color-hover);
+}
+
+/* Features Section */
+.features {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 4rem 2rem;
+    gap: 2rem;
+}
+
+.feature-card {
+    background: #2a2a40;
+    padding: 2.5rem;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    max-width: 300px;
+    flex: 1 1 calc(33.333% - 2rem);
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+}
+
+.feature-card h5 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    color: var(--secondary-color);
+}
+
+.feature-card p {
+    font-size: 1rem;
+    color: #cccccc;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 2rem;
+    background: var(--footer-bg-color);
+    color: var(--footer-text-color);
+    border-top: 2px solid #e0e0e0;
+}
+
+/* Dropdown styling */
+select {
+    background: var(--dropdown-bg);
+    color: var(--dropdown-text-color);
+    padding: 0.8rem;
+    border-radius: 5px;
+    border: none;
+    font-size: 1rem;
+    width: 100%;
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+}
+
+/* Button styling */
+button {
+    background: var(--button-bg);
+    color: var(--button-text-color);
+    padding: var(--button-padding);
+    border: none;
+    border-radius: var(--button-border-radius);
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+/* Centering the signup page content */
+.signup-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Full viewport height */
+    background: linear-gradient(135deg, var(--secondary-color), #ff9671);
+    color: var(--text-color);
+}
+
+.signup-form {
+    background: #2a2a40;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.signup-form h2 {
+    margin-bottom: 1.5rem;
+    font-size: 2rem;
+    color: var(--text-color);
+    font-weight: bold;
+}
+
+.signup-form input {
+    width: 100%;
+    padding: 0.8rem;
+    margin: 0.5rem 0;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    background: #1c1f24;
+    color: var(--text-color);
+    font-family: var(--font-family);
+}
+
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideInFromLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInFromRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
