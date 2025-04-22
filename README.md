@@ -11,7 +11,8 @@
 | 23846476 | Alysha Prompruek   | alyshaprompruek          |
 | 24001891 | Naomi Xie          | wanbuliaoyidian3235      |
 | 24314808 | Riley Pigneguy     | rileypigneguy            |
-| 23982753 | Yasmin Kamaruddin  | ----                     |
+| 23982753 | Yasmin Kamaruddin  | 
+nanayasmin               |
 
 
 
