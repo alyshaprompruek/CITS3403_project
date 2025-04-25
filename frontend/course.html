@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Course Page</title>
+
+  <!-- Import Chart.js and time adapter -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+  <!-- Basic page styling -->
+  <style>
+    .hidden { display: none; }
+    aside button { display: block; margin-bottom: 5px; }
+  </style>
+</head>
+<body>
+
+  <!-- JavaScript logic starts here -->
+  <script>
+    // Mock data simulating logged-in user "admin" and their units/assessments
+    const mockData = {
+      admin: {
+        user_id: "admin",
+        password: "123456",
+        name: "Admin",
+        units: [
+          {
+            unit_id: "u01",
+            unit_name: "CITS3403",
+            target_score: 85,
+            assessments: [
+              { task_name: "Project", score: "90", weight: "40%", date: "2025-04-10", note: "Good" },
+              { task_name: "Final Exam", score: "85", weight: "60%", date: "2025-06-01", note: "Well done" }
+            ]
+          },
+          {
+            unit_id: "u02",
+            unit_name: "CITS2002",
+            target_score: 80,
+            assessments: [
+              { task_name: "Quiz 1", score: "10", weight: "10%", date: "2025-03-15", note: "" }
+            ]
+          }
+        ]
+      }
+    };
+
+    // Global state for current user and unit
+    let currentUser = mockData.admin;
+    let currentUnit = null;
+    let lineChart, pieChart;
+
+    // Function to simulate adding a new unit for the user
+    function simulateAddUnit() {
+      const name = prompt("unit name:", "New Unit");
+      if (!name || name.trim() === "") return;
+      const unit = {
+        unit_id: "u" + (currentUser.units.length + 1),
+        unit_name: name.trim(),
+        target_score: 80,
+        assessments: []
+      };
+      currentUser.units.push(unit);
+      selectUnit(unit);
+      updateView();
+    }
+
+    // Function to select a unit and update view
+    function selectUnit(unit) {
+      currentUnit = unit;
+      updateView();
+    }
+
+    // Main view update function (updates sidebar, title, assessment table, charts)
+    function updateView() {
+      const unitList = document.getElementById("unitList");
+      const noUnitBox = document.getElementById("noUnitBox");
+      const courseContent = document.getElementById("courseContent");
+      const currentTitle = document.getElementById("currentUnitTitle");
+      const tableBody = document.querySelector("#assessmentTable tbody");
+
+      unitList.innerHTML = "";
+      currentUser.units.forEach(unit => {
+        const btn = document.createElement("button");
+        btn.textContent = unit.unit_name;
+        btn.onclick = () => selectUnit(unit);
+        unitList.appendChild(btn);
+      });
+
+      if (!currentUnit) {
+        noUnitBox.classList.remove("hidden");
+        courseContent.classList.add("hidden");
+      } else {
+        noUnitBox.classList.add("hidden");
+        courseContent.classList.remove("hidden");
+        currentTitle.textContent = currentUnit.unit_name;
+
+        tableBody.innerHTML = "";
+        currentUnit.assessments.forEach(a => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${a.task_name}</td>
+            <td>${a.score}</td>
+            <td>${a.weight}</td>
+            <td>${a.date}</td>
+            <td>${a.note}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+
+        renderCharts(currentUnit.assessments);
+      }
+    }
+
+    // Render line chart and pie chart based on assessment data
+    function renderCharts(assessments) {
+      const lineCtx = document.getElementById("lineChart").getContext("2d");
+      const pieCtx = document.getElementById("pieChart").getContext("2d");
+
+      const lineData = assessments.filter(a => a.score !== "/" && !isNaN(Number(a.score)))
+        .map(a => ({ x: new Date(a.date), y: Number(a.score) }));
+
+      const pieData = assessments
+        .filter(a => a.weight.includes("%"))
+        .map(a => ({
+          label: a.task_name,
+          value: parseFloat(a.weight.replace("%", ""))
+        }));
+
+      if (lineChart) lineChart.destroy();
+      if (pieChart) pieChart.destroy();
+
+      lineChart = new Chart(lineCtx, {
+        type: 'line',
+        data: {
+          datasets: [{
+            label: "Score Over Time",
+            data: lineData,
+            fill: false,
+            borderColor: 'blue',
+            tension: 0.3,
+            pointBackgroundColor: 'blue'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              onClick: () => {},
+              labels: {
+                color: '#000',
+                boxWidth: 12,
+                font: { weight: 'bold' }
+              }
+            }
+          },
+          scales: {
+            x: {
+              type: 'time',
+              time: { unit: 'day' },
+              title: { display: true, text: 'Date' }
+            },
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: 'Score' }
+            }
+          }
+        }
+      });
+
+      pieChart = new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+          labels: pieData.map(p => p.label),
+          datasets: [{
+            data: pieData.map(p => p.value),
+            backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"]
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              onClick: () => {},
+              labels: {
+                color: '#000',
+                font: { size: 12 }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Run on page load: select first unit if exists and render view
+    window.onload = () => {
+      if (currentUser.units.length > 0) {
+        currentUnit = currentUser.units[0];
+      }
+      updateView();
+    }
+  </script>
+</body>
+</html>
