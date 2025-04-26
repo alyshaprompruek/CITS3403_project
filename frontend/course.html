@@ -3,22 +3,71 @@
 <head>
   <meta charset="UTF-8">
   <title>Course Page</title>
-
-  <!-- Import Chart.js and time adapter -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 
-  <!-- Basic page styling -->
   <style>
     .hidden { display: none; }
     aside button { display: block; margin-bottom: 5px; }
   </style>
 </head>
 <body>
+  <header style="padding: 10px; border-bottom: 1px solid #ccc;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div><strong>Dashboard Title</strong> | <span>or our logo</span></div>
+      <nav>
+        <a href="#">dashboard(home)</a> |
+        <a href="#">units</a>
+        <input type="text" placeholder="Hinted search text">
+        <button>🔍</button>
+        <span style="margin-left: 10px;">pfp</span>
+      </nav>
+    </div>
+  </header>
 
-  <!-- JavaScript logic starts here -->
+  <main style="display: flex; height: 90vh;">
+    <aside style="width: 20%; border-right: 1px solid #ccc; padding: 10px;">
+      <h3>UNIT</h3>
+      <button onclick="simulateAddUnit()">+ new unit</button>
+      <div id="unitList"></div>
+    </aside>
+
+    <section style="width: 80%; padding: 20px;">
+      <div id="noUnitBox">
+        <h2>you hvnt create any units yet</h2>
+        <button onclick="simulateAddUnit()">➕ new unit</button>
+      </div>
+
+      <div id="courseContent" class="hidden">
+        <h2 id="currentUnitTitle"></h2>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+          <div style="width: 48%;">
+            <canvas id="lineChart" height="200"></canvas>
+          </div>
+          <div style="width: 48%;">
+            <canvas id="pieChart" height="200"></canvas>
+          </div>
+        </div>
+
+        <h2>Assessment List</h2>
+        <button style="margin-bottom: 10px;">➕ new Assessment</button>
+        <table border="1" cellpadding="8" cellspacing="0" width="100%" id="assessmentTable">
+          <thead>
+            <tr style="background-color: #f2f2f2;">
+              <th>Task</th>
+              <th>Score</th>
+              <th>Weight</th>
+              <th>Date</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
   <script>
-    // Mock data simulating logged-in user "admin" and their units/assessments
     const mockData = {
       admin: {
         user_id: "admin",
@@ -46,12 +95,10 @@
       }
     };
 
-    // Global state for current user and unit
     let currentUser = mockData.admin;
     let currentUnit = null;
     let lineChart, pieChart;
 
-    // Function to simulate adding a new unit for the user
     function simulateAddUnit() {
       const name = prompt("unit name:", "New Unit");
       if (!name || name.trim() === "") return;
@@ -66,13 +113,11 @@
       updateView();
     }
 
-    // Function to select a unit and update view
     function selectUnit(unit) {
       currentUnit = unit;
       updateView();
     }
 
-    // Main view update function (updates sidebar, title, assessment table, charts)
     function updateView() {
       const unitList = document.getElementById("unitList");
       const noUnitBox = document.getElementById("noUnitBox");
@@ -113,20 +158,17 @@
       }
     }
 
-    // Render line chart and pie chart based on assessment data
     function renderCharts(assessments) {
       const lineCtx = document.getElementById("lineChart").getContext("2d");
       const pieCtx = document.getElementById("pieChart").getContext("2d");
 
       const lineData = assessments.filter(a => a.score !== "/" && !isNaN(Number(a.score)))
-        .map(a => ({ x: new Date(a.date), y: Number(a.score) }));
+        .map(a => ({ x: a.date, y: Number(a.score) }));
 
-      const pieData = assessments
-        .filter(a => a.weight.includes("%"))
-        .map(a => ({
-          label: a.task_name,
-          value: parseFloat(a.weight.replace("%", ""))
-        }));
+      const pieData = assessments.map(a => ({
+        label: a.task_name,
+        value: parseFloat(a.weight.replace("%", ""))
+      }));
 
       if (lineChart) lineChart.destroy();
       if (pieChart) pieChart.destroy();
@@ -138,34 +180,23 @@
             label: "Score Over Time",
             data: lineData,
             fill: false,
-            borderColor: 'blue',
-            tension: 0.3,
-            pointBackgroundColor: 'blue'
+            borderColor: 'blue'
           }]
         },
         options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              onClick: () => {},
-              labels: {
-                color: '#000',
-                boxWidth: 12,
-                font: { weight: 'bold' }
-              }
-            }
-          },
-          scales: {
-            x: {
-              type: 'time',
-              time: { unit: 'day' },
-              title: { display: true, text: 'Date' }
-            },
-            y: {
-              beginAtZero: true,
-              title: { display: true, text: 'Score' }
-            }
-          }
+            responsive: true,
+            plugins: {
+                legend: {
+                    onClick: () => {},  // disable clicking
+                    labels: {
+                        color: '#000',
+                        boxWidth: 12,
+                        font: { weight: 'bold' }
+                        }
+                    }
+                
+        },
+        scales: { x: { type: 'time', time: { unit: 'day' } } }
         }
       });
 
@@ -183,7 +214,7 @@
           plugins: {
             legend: {
               position: 'bottom',
-              onClick: () => {},
+              onClick: () => {}, // disable clicking
               labels: {
                 color: '#000',
                 font: { size: 12 }
@@ -194,7 +225,6 @@
       });
     }
 
-    // Run on page load: select first unit if exists and render view
     window.onload = () => {
       if (currentUser.units.length > 0) {
         currentUnit = currentUser.units[0];
