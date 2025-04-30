@@ -89,37 +89,33 @@
     </section>
   </main>
 
+  <!---------------mock data---------------->
   <script>
-    const mockData = {
-      admin: {
-        user_id: "admin",
-        password: "123456",
-        name: "Admin",
-        units: [
-          {
-            unit_id: "u01",
-            unit_name: "CITS3403",
-            target_score: 85,
-            assessments: [
-              { task_name: "Project", score: "90", weight: "40%", date: "2025-04-10", note: "Good" },
-              { task_name: "Final Exam", score: "85", weight: "60%", date: "2025-06-01", note: "Well done" }
-            ]
-          },
-          {
-            unit_id: "u02",
-            unit_name: "CITS2002",
-            target_score: 80,
-            assessments: [
-              { task_name: "Quiz 1", score: "10", weight: "10%", date: "2025-03-15", note: "" }
-            ]
-          }
-        ]
-      }
-    };
+  
 
-    let currentUser = mockData.admin;
+    let currentUser = { name: "Admin" }; 
     let currentUnit = null;
     let lineChart, pieChart;
+
+    // get mock data form mockData.js
+    window.onload = () => {
+      fetch('/api/units')
+        .then(res => res.json())
+        .then(units => {
+          currentUser.units = units;  
+          if (units.length > 0) {
+            currentUnit = units[0];   
+          }
+          updateView();
+        })
+        .catch(err => {
+        console.error("❌ Failed to fetch units:", err);
+        // fallback to mockData if needed
+        currentUser.units = mockData.admin.units;
+        currentUnit = currentUser.units[0];
+        updateView();
+        });
+    };
 
     function simulateAddUnit() {
       const name = prompt("unit name:", "New Unit");
@@ -247,12 +243,7 @@
       });
     }
 
-    window.onload = () => {
-      if (currentUser.units.length > 0) {
-        currentUnit = currentUser.units[0];
-      }
-      updateView();
-    }
+    //window.onload have been rewritten 
   </script>
 </body>
 </html>
