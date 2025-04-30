@@ -14,5 +14,9 @@ app.register_blueprint(courses_api)
 def course():
     return render_template("course.html")  
 
+@app.route("/dashboard")
+def dashboard():
+    return render_template("dashboard.html")
+
 if __name__ == "__main__":
     app.run(debug=True)

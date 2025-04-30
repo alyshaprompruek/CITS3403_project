@@ -1,391 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard | Grade Tracker</title>
-    <!-- Bootstrap CSS CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <title>Dashboard | Grade Tracker</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
-
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white mb-4">
-        <div class="container-fluid">  
-            <a class="navbar-brand" href="#">Grade Tracker</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav justify-content-center w-100">
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" href="#">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" href="course.html">Units</a>
-                    </li>
-                </ul>
-            </div>
-            <div class="ms-auto d-flex align-items-center">
-                <div class="rounded-circle bg-secondary" 
-                     style="width: 40px; height: 40px;">
-                </div>
-              </div>
-        </div>
-    </nav>
-
-    <div class="container">
-        <h1 class="mb-4">My Dashboard</h1>
-      
-        <!-- Row 1: Summary Table and Line Chart -->
-        <div class="row">
-          <!-- Summary Table -->
-          <div class="col-md-4">
-            <div class="card">
-              <div class="card-header">Summary</div>
-              <div class="card-body">
-                <table class="table table-bordered small-table">
-                  <tbody>
-                    <tr>
-                      <th>WAM</th>
-                      <td>84</td>
-                    </tr>
-                    <tr>
-                      <th>GPA</th>
-                      <td>6.2</td>
-                    </tr>
-                    <tr>
-                      <th>Top Unit</th>
-                      <td>CITS3403</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-      
-          <!-- Line Chart -->
-           
-          <div class="col-md-8">
-            <div class="card">
-              <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Unit Progression</span>
-                <div>
-                    <button id="saveGraphButton" class="btn btn-sm btn-secondary"><i class="bi bi-save"></i>
-                    </button>
-                    <button id="shareGraphButton" class="btn btn-sm btn-secondary"><i class="bi bi-share"></i>
-                    </button>
-                    <button id="toggleChartButton" class="btn btn-sm btn-primary">Switch to Rankings</button>
-                </div>
-              </div>
-              <div class="card-body">
-                <canvas id="progressChart" height="150"></canvas>
-                <div id="rankingTable" class="table-responsive" style="display: none;">
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Rank</th>
-                                <th>Unit</th>
-                                <th>Average</th>
-                                <th>Grade</th>
-                            </tr>
-                        </thead>
-                        <tbody id="rankingTableBody">
-                            <!-- Rows will be dynamically added here -->
-                        </tbody>
-                    </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      
-        <div class="row py-3">
-          <!-- AI Tips -->
-          <div class="col-md-6">
-            <div class="card">
-              <div class="card-header">AI Study Assistant
-                <button id="toggleChartButton" class="btn btn-sm btn-primary float-end">Help Me</button>
-              </div>
-              <div class="card-body">
-                <p>
-                    This section analyzes your current academic progress and provides feedback on how close you are to reaching your target goals. 
-                    Based on your scores, it suggests what you need to achieve in upcoming assessments to meet your targets. 
-                    You'll also get tailored study tips and advice to stay on track and improve where needed.
-                </p>
-              </div>
-            </div>
-          </div>
-          <!-- Unit Goals -->
-          <div class="col-md-6">
-            <div class="card">
-              <div class="card-header">Unit Goals
-                <button id="toggleChartButton" class="btn btn-sm btn-primary float-end">Change Goals</button>
-              </div>
-              <div class="card-body">
-                <table class="table table-bordered">
-                  <thead>
-                    <tr>
-                      <th>Unit</th>
-                      <th>Goal Grade</th>
-                      <th>Actual Grade</th>
-                      <th>Difference</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>CITS3403</td>
-                      <td>90</td>
-                      <td>92</td>
-                      <td style="color: green;">+2</td>
-                    </tr>
-                    <tr>
-                      <td>CITS2002</td>
-                      <td>85</td>
-                      <td>82</td>
-                      <td style="color: red;">-3</td>
-                    </tr>
-                    <tr>
-                      <td>CITS3002</td>
-                      <td>80</td>
-                      <td>76</td>
-                      <td style="color: red;">-4</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-      
-      
-        </div>
-      
-        <!-- Row 3: Upcoming Assessments -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <span>Upcoming Assessments</span>
-                        <div>
-                            <select id="sortOptions" class="form-select form-select-sm w-auto d-inline">
-                                <option value="unit">Sort by Unit</option>
-                                <option value="weight">Sort by Weight</option>
-                                <option value="date">Sort by Due Date</option>
-                            </select>
-                            <button id="sortButton" class="btn btn-sm btn-primary">Sort</button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered" id="assessmentsTable">
-                                <thead>
-                                    <tr>
-                                        <th>Unit</th>
-                                        <th>Assessment</th>
-                                        <th>Weight</th>
-                                        <th>Due Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>CITS3403</td>
-                                        <td>Project</td>    
-                                        <td>40%</td>
-                                        <td>2025-05-05</td>
-                                    </tr>
-                                    <tr>
-                                        <td>CITS2002</td>
-                                        <td>Quiz 2</td>
-                                        <td>5%</td>
-                                        <td>2025-05-10</td>
-                                    </tr>
-                                    <tr>
-                                        <td>CITS3002</td>
-                                        <td>Report</td>
-                                        <td>20%</td>
-                                        <td>2025-05-20</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-      
+<body class="container py-4">
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-white mb-4">
+    <div class="container-fluid">  
+      <a class="navbar-brand" href="#">Grade Tracker</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav justify-content-center w-100">
+          <li class="nav-item">
+            <a class="nav-link text-dark active" href="/dashboard">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-dark" href="/course">Units</a>
+          </li>
+        </ul>
       </div>
-      
-      <!-- Chart.js Script -->
-      <script>
-        const ctx = document.getElementById('progressChart').getContext('2d');
-        let isLineChart = true; // Track the current view (chart or table)
-        let progressChart;
+      <div class="ms-auto d-flex align-items-center">
+        <div class="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center" style="width: 40px; height: 40px;">A</div>
+      </div>
+    </div>
+  </nav>
 
-        // Initial Line Chart Data
-        const lineChartData = {
-            type: 'line',
-            data: {
-                labels: ['March', 'April', 'May', 'June'],
-                datasets: [
-                    {
-                        label: 'CITS3403',
-                        data: [80, 85, 90, 92],
-                        borderColor: 'blue',
-                        fill: false
-                    },
-                    {
-                        label: 'CITS2002',
-                        data: [75, 78, 80, 82],
-                        borderColor: 'green',
-                        fill: false
-                    },
-                    {
-                        label: 'CITS3002',
-                        data: [70, 72, 74, 76],
-                        borderColor: 'red',
-                        fill: false
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Score'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Month'
-                        }
-                    }
-                }
-            }
-        };
+  <h1 class="mb-4">Welcome back, Admin!</h1>
 
-        // Unit data for rankings
-        const unitData = [
-            { unit: 'CITS3403', score: 92 },
-            { unit: 'CITS2002', score: 82 },
-            { unit: 'CITS3002', score: 76 }
-        ];
+  <!-- Summary Table -->
+  <div class="mb-4">
+    <h3>Summary</h3>
+    <table class="table table-bordered">
+      <tbody>
+        <tr><th>WAM</th><td id="wam"></td></tr>
+        <tr><th>GPA</th><td id="gpa"></td></tr>
+        <tr><th>Top Unit</th><td id="topUnit"></td></tr>
+      </tbody>
+    </table>
+  </div>
 
-        // Function to calculate grade based on score
-        function getGrade(score) {
-            if (score >= 80) return 'High Distinction';
-            if (score >= 70) return 'Distinction';
-            if (score >= 60) return 'Credit';
-            if (score >= 50) return 'Pass';
-            return 'Fail';
-        }
+  <!-- Unit Goals Table -->
+  <div class="mb-4">
+    <h3>Unit Goals</h3>
+    <table class="table table-striped">
+      <thead>
+        <tr><th>Unit</th><th>Target</th><th>Actual</th><th>Difference</th></tr>
+      </thead>
+      <tbody id="goalTableBody"></tbody>
+    </table>
+  </div>
 
-        // Function to populate the ranking table
-        function populateRankingTable() {
-            const tableBody = document.getElementById('rankingTableBody');
-            tableBody.innerHTML = ''; // Clear existing rows
+  <!-- Upcoming Assessments -->
+  <div class="mb-4">
+    <h3>Upcoming Assessments</h3>
+    <table class="table table-hover">
+      <thead>
+        <tr><th>Unit</th><th>Task</th><th>Due Date</th></tr>
+      </thead>
+      <tbody id="upcomingTableBody"></tbody>
+    </table>
+  </div>
 
-            // Sort units by score in descending order
-            const sortedUnits = [...unitData].sort((a, b) => b.score - a.score);
+  <!-- Charts -->
+  <div>
+    <h3>Progress Overview</h3>
+    <canvas id="progressChart" height="100"></canvas>
+  </div>
 
-            // Add rows to the table
-            sortedUnits.forEach((unit, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${unit.unit}</td>
-                    <td>${unit.score}</td>
-                    <td>${getGrade(unit.score)}</td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
-
-        // Function to toggle between Line Chart and Ranking Table
-        function toggleChart() {
-            const chartCanvas = document.getElementById('progressChart');
-            const rankingTable = document.getElementById('rankingTable');
-
-            if (isLineChart) {
-                // Switch to table view
-                progressChart.destroy(); // Destroy the chart
-                chartCanvas.style.display = 'none';
-                rankingTable.style.display = 'block';
-                populateRankingTable(); // Populate the table
-                document.getElementById('toggleChartButton').textContent = 'Switch to Progression';
-            } else {
-                // Switch to chart view
-                rankingTable.style.display = 'none';
-                chartCanvas.style.display = 'block';
-                progressChart = new Chart(ctx, lineChartData); // Recreate the chart
-                document.getElementById('toggleChartButton').textContent = 'Switch to Rankings';
-            }
-
-            isLineChart = !isLineChart; // Toggle the view state
-        }
-
-        // Initialize the chart and add event listener to the button
-        progressChart = new Chart(ctx, lineChartData);
-        document.getElementById('toggleChartButton').addEventListener('click', toggleChart);
-
-        // Save the graph as an image
-        document.getElementById('saveGraphButton').addEventListener('click', function () {
-            const canvas = document.getElementById('progressChart');
-            const image = canvas.toDataURL('image/png'); // Convert canvas to image
-            const link = document.createElement('a');
-            link.href = image;
-            link.download = 'progress-chart.png'; // Set the file name
-            link.click(); // Trigger the download
+  <script>
+    window.onload = () => {
+      fetch('/api/units')
+        .then(res => res.json())
+        .then(units => {
+          updateDashboard(units);
+        })
+        .catch(err => {
+          console.error("error", err);
         });
+    };
 
-        // Share the graph (using navigator.share API)
-        document.getElementById('shareGraphButton').addEventListener('click', function () {
-            const canvas = document.getElementById('progressChart');
-            const image = canvas.toDataURL('image/png'); // Convert canvas to image
+    function updateDashboard(units) {
+      const allScores = units.flatMap(u => u.assessments.map(a => Number(a.score)));
+      const wam = (allScores.reduce((a, b) => a + b, 0) / allScores.length).toFixed(2);
+      const gpa = (wam / 20).toFixed(2);
 
-            if (navigator.share) {
-                navigator.share({
-                    title: 'Progress Chart',
-                    text: 'Check out my progress chart!',
-                    files: [new File([image], 'progress-chart.png', { type: 'image/png' })]
-                }).catch((error) => console.error('Error sharing:', error));
-            } else {
-                alert('Sharing is not supported on this browser.');
+      const topUnit = units
+        .map(u => ({ name: u.unit_name, avg: u.assessments.length > 0 ? u.assessments.reduce((s, a) => s + Number(a.score), 0) / u.assessments.length : 0 }))
+        .sort((a, b) => b.avg - a.avg)[0];
+
+      document.getElementById("wam").textContent = wam;
+      document.getElementById("gpa").textContent = gpa;
+      document.getElementById("topUnit").textContent = topUnit.name;
+
+      const goalTable = document.getElementById("goalTableBody");
+      goalTable.innerHTML = "";
+      units.forEach(unit => {
+        let weightedSum = 0;
+        unit.assessments.forEach(a => {
+          const score = Number(a.score);
+          const weight = parseFloat(a.weight.replace('%', '')) / 100;//????????holy this is so wrong we need more detail for each assessment. pls check my issues#16
+          if (!isNaN(score) && !isNaN(weight)) {
+            weightedSum += score * weight* 10; //????what im i doing im so sleepy goodnight
+          }
+        });
+        const actual = weightedSum;
+        const diff = (actual - unit.target_score).toFixed(2);
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${unit.unit_name}</td>
+          <td>${unit.target_score}</td>
+          <td>${actual.toFixed(2)}</td>
+          <td style="color:${diff >= 0 ? 'green' : 'red'};">${diff >= 0 ? '+' : ''}${diff}</td>
+        `;
+        goalTable.appendChild(row);
+      });
+
+      const upcoming = units.flatMap(unit => unit.assessments.map(a => ({ unit: unit.unit_name, task: a.task_name, date: new Date(a.date) }))).sort((a, b) => a.date - b.date);
+
+      const upcomingTable = document.getElementById("upcomingTableBody");
+      upcomingTable.innerHTML = "";
+      upcoming.forEach(a => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${a.unit}</td><td>${a.task}</td><td>${a.date.toISOString().split('T')[0]}</td>`;
+        upcomingTable.appendChild(row);
+      });
+
+      const ctx = document.getElementById("progressChart").getContext("2d");
+      new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: units.map(u => u.unit_name),
+          datasets: [{
+            label: "scores",
+            data: units.map(u => u.assessments.length > 0 ? u.assessments.reduce((s, a) => s + Number(a.score), 0) / u.assessments.length : 0),
+            fill: false,
+            borderColor: "blue",
+            tension: 0.2
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100
             }
-        });
-
-        // Function to sort the table
-        document.getElementById('sortButton').addEventListener('click', function () {
-            const table = document.getElementById('assessmentsTable');
-            const tbody = table.querySelector('tbody');
-            const rows = Array.from(tbody.querySelectorAll('tr'));
-            const sortOption = document.getElementById('sortOptions').value;
-
-            // Sorting logic
-            rows.sort((a, b) => {
-                if (sortOption === 'unit') {
-                    // Sort by Unit (alphabetical)
-                    return a.cells[0].textContent.localeCompare(b.cells[0].textContent);
-                } else if (sortOption === 'weight') {
-                    // Sort by Weight (numerical)
-                    const weightA = parseInt(a.cells[2].textContent.replace('%', ''));
-                    const weightB = parseInt(b.cells[2].textContent.replace('%', ''));
-                    return weightA - weightB;
-                } else if (sortOption === 'date') {
-                    // Sort by Due Date (chronological)
-                    const dateA = new Date(a.cells[3].textContent.trim());
-                    const dateB = new Date(b.cells[3].textContent.trim());
-                    return dateA - dateB;
-                }
-            });
-
-            // Re-append sorted rows to the table body
-            rows.forEach(row => tbody.appendChild(row));
-        });
-      </script>
+          }
+        }
+      });
+    }
+  </script>
 </body>
 </html>
