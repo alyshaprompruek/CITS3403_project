@@ -7,7 +7,8 @@ from app import application
 @application.route('/')
 def homepage():
     #searches for index.html in the templates folder
-    return render_template('homepage.html', user=None)
+    user = session.get("user", None)
+    return render_template('homepage.html', user=user)
 
 @application.route('/signup', methods=["POST","GET"])
 def signup():
@@ -27,7 +28,6 @@ def signup():
                     password=password
                 )
 
-
                 session["user"] = new_user.to_dict()
 
                 return redirect(url_for('dashboard'))
@@ -39,6 +39,18 @@ def dashboard():
         return render_template('dashboard.html', user=user)
     else:
         return redirect(url_for('homepage'))
+    
+@application.route('/settings')
+def settings():
+    if "user" in session:
+        user = session["user"]
+        return render_template('settings.html', user=user)
+    else:
+        return redirect(url_for('homepage'))
 
-
+@application.route('/api/logout', methods=["POST"])
+def logout():
+    # Clear the session
+    session.pop("user", None)
+    return redirect(url_for('homepage'))
 
