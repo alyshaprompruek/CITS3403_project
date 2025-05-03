@@ -1,8 +1,10 @@
 from flask import render_template, request, redirect, session, url_for
 from app.models import user
-from app.forms import SignUpForm
+from app.forms import SignUpForm, LoginForm
 from app import application 
 
+users = []
+#temporary list to store users
 
 @application.route('/')
 def homepage():
@@ -28,9 +30,32 @@ def signup():
                     password=password
                 )
 
+                # later validation required is that the email is not already in use
+
+                users.append(new_user)
+
                 session["user"] = new_user.to_dict()
 
                 return redirect(url_for('dashboard'))
+        
+@application.route('/login', methods=["POST","GET"])
+def login():
+    form = LoginForm()
+    if request.method == "GET":
+        return render_template('login.html', form=form)
+    elif request.method == "POST":
+        if form.validate_on_submit():
+                email = form.email.data
+                password = form.password.data
+
+                for user in users:
+                    if user.email == email and user.password == password:
+                        session["user"] = user.to_dict()
+                        return redirect(url_for('dashboard'))
+                
+                # If the user is not found or password is incorrect
+                return render_template('login.html', form=form, error="Invalid email or password.")
+
 
 @application.route('/dashboard')
 def dashboard():
