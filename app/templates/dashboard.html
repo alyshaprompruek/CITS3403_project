@@ -1,10 +1,73 @@
 {% extends "base.html" %}
 
 {% block head %}
-<title>Dashboard</title>
+<title>Dashboard | Grade Tracker</title>
 {% endblock %}
 
 {% block body %}
 <!-- Hero Section -->
-<p> Welcome to your Dashboard, {{ user.email }}!</p>
+<h2>Welcome to your Dashboard, {{ user.email }}!</h2>
+
+<!-- Summary Table -->
+<div class="card mb-4">
+    <div class="card-header">Summary</div>
+    <div class="card-body">
+        <table class="table table-bordered small-table">
+            <tbody>
+                <tr>
+                    <th>WAM</th>
+                    <td>{{ user.wam }}</td>
+                </tr>
+                <tr>
+                    <th>GPA</th>
+                    <td>{{ user.gpa }}</td>
+                </tr>
+                <tr>
+                    <th>Top Unit</th>
+                    <td>{{ user.top_unit }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Rankings Table -->
+<div class="card">
+    <div class="card-header">Unit Rankings</div>
+    <div class="card-body">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Unit</th>
+                    <th>Average</th>
+                    <th>Grade</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for unit in user.units %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ unit.name }}</td>
+                        <td>{{ unit.average }}</td>
+                        <td>{{ unit.grade }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Progress Analysis Section -->
+<div class="card mb-4">
+    <div class="card-header">Progress Analysis</div>
+    <div class="card-body">
+        <p>AI-powered insights will help you track your academic progress and give recommendations.</p>
+        <div id="ai-recommendations" class="mb-3">
+            <p>AI Recommendations will appear here...</p>
+        </div>
+        <button id="aiAnalyzeButton" class="btn btn-primary">Analyze Progress</button>
+    </div>
+</div>
+
 {% endblock %}

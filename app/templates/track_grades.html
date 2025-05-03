@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <!-- Include the track_grades.js script here -->
+    <script src="{{ url_for('static', filename='track_grades.js') }}"></script>
+{% endblock %}
+
+{% block body %}
+    <div id="container">
+        <div id="leftPanel">
+            <h2>Hi, {{ user.email }}! Track your assessments now.</h2>
+            <div id="unitList">
+                <!-- List of units will be dynamically populated here -->
+            </div>
+            <button onclick="simulateAddUnit()">Add Unit</button>
+        </div>
+
+        <div id="courseContent" class="hidden">
+            <h3 id="currentUnitTitle"></h3>
+            <div id="noUnitBox" class="hidden">
+                <p>No unit selected. Please add or select a unit.</p>
+            </div>
+
+            <div id="assessmentContent">
+                <table id="assessmentTable">
+                    <thead>
+                        <tr>
+                            <th>Task Name</th>
+                            <th>Score</th>
+                            <th>Weight</th>
+                            <th>Date</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Assessment rows will be dynamically populated here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="charts">
+                <canvas id="lineChart"></canvas>
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+    </div>
+{% endblock %}
