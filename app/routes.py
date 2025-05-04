@@ -22,7 +22,6 @@ def signup():
 
             new_user = user(
                 email=email, 
-                studentBoolean=(role == 'Student'), 
                 password=password
             )
 
