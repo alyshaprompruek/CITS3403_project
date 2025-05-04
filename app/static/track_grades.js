@@ -14,19 +14,6 @@ const mockData = {
       ]
     }
   };
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const userData = mockData["admin"];
-    if (!userData || !userData.units) {
-      document.getElementById("noUnitBox").classList.remove("hidden");
-      return;
-    }
-  
-    // This function should populate the unit list and render the first unit
-    renderUnits(userData.units);
-  });
-  
-
   
 
 // track_grades.js
