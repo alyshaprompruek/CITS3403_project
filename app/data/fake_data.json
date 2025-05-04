@@ -7,6 +7,7 @@
           "unit_id": "u01",
           "unit_name": "CITS3403",
           "target_score": 85,
+          "outline_url": "https://www.uwa.edu.au/cits3403-outline",
           "assessments": [
             { "task_name": "Project", "score": "90", "weight": "40%", "date": "2025-04-10", "note": "Good" },
             { "task_name": "Final Exam", "score": "85", "weight": "60%", "date": "2025-06-01", "note": "Well done" }
@@ -15,6 +16,7 @@
         {
           "unit_id": "u02",
           "unit_name": "CITS2002",
+          "outline_url": "https://www.uwa.edu.au/cits2002-outline",
           "target_score": 80,
           "assessments": [
             { "task_name": "Quiz 1", "score": "10", "weight": "10%", "date": "2025-03-15", "note": "" }
