@@ -19,7 +19,6 @@ def signup():
         if form.validate_on_submit():
             email = form.email.data
             password = form.password.data
-            role = form.role.data
 
             new_user = user(
                 email=email, 
