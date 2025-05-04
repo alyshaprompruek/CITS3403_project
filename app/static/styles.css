@@ -108,6 +108,13 @@ main {
     color: #cccccc;
 }
 
+/* Track Grades Page */
+#lineChart {
+    background-color: white;
+}
+
+
+
 /* Footer */
 footer {
     text-align: center;

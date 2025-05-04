@@ -3,6 +3,8 @@
 {% block head %}
     <!-- Include the track_grades.js script here -->
     <script src="{{ url_for('static', filename='track_grades.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 {% endblock %}
 
 {% block body %}
@@ -40,7 +42,7 @@
 
             <div id="charts">
                 <canvas id="lineChart"></canvas>
-                <canvas id="pieChart"></canvas>
+    
             </div>
         </div>
     </div>
