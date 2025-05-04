@@ -30,15 +30,22 @@ def signup():
 
                 session["user"] = new_user.to_dict()
 
-                return redirect(url_for('dashboard'))
+                return redirect(url_for('dashboarda'))
 
-@application.route('/dashboard')
-def dashboard():
+@application.route('/dashboarda')
+def dashboarda():
     if "user" in session:
         user = session["user"]
-        return render_template('dashboard.html', user=user)
+        return render_template('dashboarda.html', user=user)
     else:
         return redirect(url_for('homepage'))
 
+@application.route("/dashboard")
+def dashboard():
+    return render_template("dashboard.html")
+
+@application.route("/course")
+def course():
+    return render_template("course.html")
 
 
