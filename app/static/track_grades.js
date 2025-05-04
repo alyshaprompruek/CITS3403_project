@@ -139,3 +139,27 @@ function renderCharts(assessments) {
 });
 
 }
+
+function addAssessment() {
+    const taskName = prompt("Enter Task Name:");
+    const score = prompt("Enter Score (e.g., 85):");
+    const weight = prompt("Enter Weight (e.g., 20%):");
+    const date = prompt("Enter Date (YYYY-MM-DD):");
+    const note = prompt("Enter Note (optional):");
+
+    if (!taskName || !score || !weight || !date) {
+        alert("All fields except 'Note' are required!");
+        return;
+    }
+
+    const newAssessment = {
+        task_name: taskName.trim(),
+        score: score.trim(),
+        weight: weight.trim(),
+        date: date.trim(),
+        note: note ? note.trim() : ""
+    };
+
+    currentUnit.assessments.push(newAssessment);
+    updateView(); // Refresh the view to include the new assessment
+}

@@ -14,7 +14,7 @@
             <div id="unitList">
                 <!-- List of units will be dynamically populated here -->
             </div>
-            <button onclick="simulateAddUnit()">Add Unit</button>
+            <button class="styled-button" onclick="simulateAddUnit()">Add Unit</button>
         </div>
 
         <div id="courseContent" class="hidden">
@@ -24,7 +24,7 @@
             </div>
 
             <div id="assessmentContent">
-                <table id="assessmentTable">
+                <table id="assessmentTable" class="styled-table">
                     <thead>
                         <tr>
                             <th>Task Name</th>
@@ -38,6 +38,7 @@
                         <!-- Assessment rows will be dynamically populated here -->
                     </tbody>
                 </table>
+                <button class= "styled-button" id="addAssessmentButton" onclick="addAssessment()">Add Assessment</button>
             </div>
 
             <div id="charts">
