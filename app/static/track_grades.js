@@ -90,35 +90,27 @@ function updateView() {
 }
 
 function renderCharts(assessments) {
-  const lineCtx = document.getElementById("lineChart").getContext("2d");
-  const pieCtx = document.getElementById("pieChart").getContext("2d");
+    const lineCtx = document.getElementById("lineChart").getContext("2d");
 
-  const lineData = assessments.filter(a => a.score !== "/" && !isNaN(Number(a.score)))
-    .map(a => ({ x: a.date, y: Number(a.score) }));
+    const lineData = assessments.filter(a => a.score !== "/" && !isNaN(Number(a.score)))
+        .map(a => ({ x: a.date, y: Number(a.score) }));
 
-  const pieData = assessments.map(a => ({
-    label: a.task_name,
-    value: parseFloat(a.weight.replace("%", ""))
-  }));
+    if (lineChart) lineChart.destroy();
 
-  if (lineChart) lineChart.destroy();
-  if (pieChart) pieChart.destroy();
-
-  lineChart = new Chart(lineCtx, {
+    lineChart = new Chart(lineCtx, {
     type: 'line',
     data: {
-      datasets: [{
-        label: "Score Over Time",
-        data: lineData,
-        fill: false,
-        borderColor: 'blue'
-      }]
+        datasets: [{
+            label: "Score Over Time",
+            data: lineData,
+            borderColor: '#4CAF50', // green
+            backgroundColor: '#A5D6A7', // optional, if you want filled points or area under the line
+        }]
     },
     options: {
         responsive: true,
         plugins: {
             legend: {
-                onClick: () => {},  // disable clicking
                 labels: {
                     color: '#000',
                     boxWidth: 12,
@@ -126,31 +118,48 @@ function renderCharts(assessments) {
                 }
             }
         },
-        scales: { x: { type: 'time', time: { unit: 'day' } } }
+        scales: {
+            x: {
+                type: 'time',
+                time: {
+                    unit: 'day'
+                }
+            }
+        },
+        layout: {
+            padding: {
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: 20
+            }
+        },
+    
     }
-  });
+});
 
-  pieChart = new Chart(pieCtx, {
-    type: 'pie',
-    data: {
-      labels: pieData.map(p => p.label),
-      datasets: [{
-        data: pieData.map(p => p.value),
-        backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"]
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          onClick: () => {}, // disable clicking
-          labels: {
-            color: '#000',
-            font: { size: 12 }
-          }
-        }
-      }
+}
+
+function addAssessment() {
+    const taskName = prompt("Enter Task Name:");
+    const score = prompt("Enter Score (e.g., 85):");
+    const weight = prompt("Enter Weight (e.g., 20%):");
+    const date = prompt("Enter Date (YYYY-MM-DD):");
+    const note = prompt("Enter Note (optional):");
+
+    if (!taskName || !score || !weight || !date) {
+        alert("All fields except 'Note' are required!");
+        return;
     }
-  });
+
+    const newAssessment = {
+        task_name: taskName.trim(),
+        score: score.trim(),
+        weight: weight.trim(),
+        date: date.trim(),
+        note: note ? note.trim() : ""
+    };
+
+    currentUnit.assessments.push(newAssessment);
+    updateView(); // Refresh the view to include the new assessment
 }
