@@ -6,4 +6,3 @@ application.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'dev-key-for-
 
 import app.routes
 
-
