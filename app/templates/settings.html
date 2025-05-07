@@ -1,14 +1,19 @@
 {% extends "base.html" %}
 
 {% block head %}
-<title>Settings</title>
+    <title>Settings</title>
 {% endblock %}
 
 {% block body %}
-<!-- Hero Section -->
-<p> This is settings, {{ user.email }}!</p>
-<!-- Logout Button -->
-<form action="{{ url_for('logout') }}" method="post">
-    <button type="submit" class="btn btn-danger">Logout</button>
-</form>
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+    <div class="card p-4 shadow-sm" style="min-width: 300px; max-width: 500px; width: 100%;">
+        <h2 class="text-center mb-3">Settings</h2>
+
+        <p class="text-center">Email: <strong>{{ user.email }}</strong>!</p>
+
+        <form action="{{ url_for('logout') }}" method="post" class="d-grid mt-4">
+            <button type="submit" class="btn btn-danger">Logout</button>
+        </form>
+    </div>
+</div>
 {% endblock %}

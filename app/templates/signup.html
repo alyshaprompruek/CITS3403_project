@@ -5,21 +5,34 @@
 {% endblock %}
 
 {% block body %}
-    <div class="signup-container">
-        <form class="signup-form" action="/signup" method="POST">
-            {{ SignUpForm.hidden_tag() }}
-            <h2>Sign Up</h2>
-            <div>
-                {{ SignUpForm.email.label }}<br>
-                {{ SignUpForm.email(size=32) }}
-            </div>
-            <div>
-                {{ SignUpForm.password.label }}<br>
-                {{ SignUpForm.password(size=32) }}
-            </div>
-            <div>
-                {{ SignUpForm.submit(class_="button") }}
-            </div>
-        </form>
+    <div class="container d-flex justify-content-center align-items-center min-vh-100">
+        <div class="card p-4 shadow-sm" style="min-width: 300px; max-width: 400px; width: 100%;">
+            <h2 class="text-center mb-4">Sign Up</h2>
+
+            <!-- Display error message if present -->
+            {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('signup') }}">
+                {{ form.hidden_tag() }}
+
+                <div class="mb-3">
+                    {{ form.email.label(class="form-label") }}
+                    {{ form.email(class="form-control", size=32) }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.password.label(class="form-label") }}
+                    {{ form.password(class="form-control", size=32) }}
+                </div>
+
+                <div class="d-grid">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
     </div>
 {% endblock %}
