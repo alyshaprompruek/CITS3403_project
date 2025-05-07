@@ -5,69 +5,148 @@
 {% endblock %}
 
 {% block body %}
-<!-- Hero Section -->
-<h2>Welcome to your Dashboard, {{ user.email }}!</h2>
-
-<!-- Summary Table -->
-<div class="card mb-4">
-    <div class="card-header">Summary</div>
-    <div class="card-body">
-        <table class="table table-bordered small-table">
-            <tbody>
-                <tr>
-                    <th>WAM</th>
-                    <td>{{ user.wam }}</td>
-                </tr>
-                <tr>
-                    <th>GPA</th>
-                    <td>{{ user.gpa }}</td>
-                </tr>
-                <tr>
-                    <th>Top Unit</th>
-                    <td>{{ user.top_unit }}</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- Rankings Table -->
-<div class="card">
-    <div class="card-header">Unit Rankings</div>
-    <div class="card-body">
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Rank</th>
-                    <th>Unit</th>
-                    <th>Average</th>
-                    <th>Grade</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for unit in user.units %}
-                    <tr>
-                        <td>{{ loop.index }}</td>
-                        <td>{{ unit.name }}</td>
-                        <td>{{ unit.average }}</td>
-                        <td>{{ unit.grade }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- Progress Analysis Section -->
-<div class="card mb-4">
-    <div class="card-header">Progress Analysis</div>
-    <div class="card-body">
-        <p>AI-powered insights will help you track your academic progress and give recommendations.</p>
-        <div id="ai-recommendations" class="mb-3">
-            <p>AI Recommendations will appear here...</p>
+<div class="container py-5">
+    <!-- Summary Table -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Summary</h5>
         </div>
-        <button id="aiAnalyzeButton" class="btn btn-primary">Analyze Progress</button>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm">
+                    <tbody>
+                        <tr>
+                            <th scope="row">WAM</th>
+                            <td>{{ user.wam | default('N/A', true) }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">GPA</th>
+                            <td>{{ user.gpa | default('N/A', true) }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Top Unit</th>
+                            <td>{{ user.top_unit | default('N/A', true) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rankings Table -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Unit Rankings</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Year | Sem</th>
+                            <th scope="col">Unit Name</th>
+                            <th scope="col">Unit Code</th>
+                            <th scope="col">Grade</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if user.units %}
+                            {% for unit in user.units %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ unit.year }} | Sem {{ unit.semester }}</td>
+                                    <td>{{ unit.name }}</td>
+                                    <td>{{ unit.unit_code }}</td>
+                                    <td>{{ unit.grade | default('N/A', true) }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editUnitModal"
+                                            data-unit-id="{{ unit.id }}"
+                                            data-unit-name="{{ unit.name }}"
+                                            data-unit-code="{{ unit.unit_code }}"
+                                            data-unit-grade="{{ unit.grade }}"
+                                            data-unit-year="{{ unit.year }}"
+                                            data-unit-semester="{{ unit.semester }}">
+                                            ✏️ Edit
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center">No units added yet. <a href="{{ url_for('settings') }}">Add a unit</a>.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Analysis Section -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Progress Analysis</h5>
+        </div>
+        <div class="card-body">
+            <p>AI-powered insights will help you track your academic progress and provide recommendations.</p>
+            <div id="ai-recommendations" class="mb-3">
+                <p class="text-muted">AI Recommendations will appear here...</p>
+            </div>
+            <button id="aiAnalyzeButton" class="btn btn-primary">Analyze Progress</button>
+        </div>
     </div>
 </div>
 
+<!-- Edit Unit Modal -->
+<div class="modal fade" id="editUnitModal" tabindex="-1" aria-labelledby="editUnitModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('update_unit') }}">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editUnitModalLabel">Edit Unit</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="unit_id" id="editUnitId">
+          <div class="mb-3">
+            <label for="editUnitName" class="form-label">Unit Name</label>
+            <input type="text" class="form-control" id="editUnitName" name="name" required>
+          </div>
+          <div class="mb-3">
+            <label for="editUnitCode" class="form-label">Unit Code</label>
+            <input type="text" class="form-control" id="editUnitCode" name="unit_code" required>
+          </div>
+          <div class="mb-3">
+            <label for="editUnitYear" class="form-label">Year</label>
+            <input type="number" class="form-control" id="editUnitYear" name="year" required>
+          </div>
+          <div class="mb-3">
+            <label for="editUnitSemester" class="form-label">Semester</label>
+            <input type="text" class="form-control" id="editUnitSemester" name="semester" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Script -->
+<script>
+  const editModal = document.getElementById('editUnitModal');
+  editModal.addEventListener('show.bs.modal', event => {
+    const button = event.relatedTarget;
+    document.getElementById('editUnitId').value = button.getAttribute('data-unit-id');
+    document.getElementById('editUnitName').value = button.getAttribute('data-unit-name');
+    document.getElementById('editUnitCode').value = button.getAttribute('data-unit-code');
+    document.getElementById('editUnitYear').value = button.getAttribute('data-unit-year');
+    document.getElementById('editUnitSemester').value = button.getAttribute('data-unit-semester');
+  });
+</script>
 {% endblock %}
