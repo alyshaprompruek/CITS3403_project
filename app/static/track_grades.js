@@ -1,19 +1,19 @@
-const mockData = {
-    admin: {
-      units: [
-        {
-          unit_id: "u1",
-          unit_name: "CITS3403",
-          target_score: 80,
-          assessments: [
-            { task_name: "Assignment 1", score: "78", weight: "20%", date: "2025-04-01", note: "Good effort" },
-            { task_name: "Quiz", score: "85", weight: "10%", date: "2025-04-10", note: "" },
-            { task_name: "Final Exam", score: "/", weight: "70%", date: "2025-06-01", note: "Yet to complete" }
-          ]
-        }
-      ]
-    }
-  };
+// const mockData = {
+//     admin: {
+//       units: [
+//         {
+//           unit_id: "u1",
+//           unit_name: "CITS3403",
+//           target_score: 80,
+//           assessments: [
+//             { task_name: "Assignment 1", score: "78", weight: "20%", date: "2025-04-01", note: "Good effort" },
+//             { task_name: "Quiz", score: "85", weight: "10%", date: "2025-04-10", note: "" },
+//             { task_name: "Final Exam", score: "/", weight: "70%", date: "2025-06-01", note: "Yet to complete" }
+//           ]
+//         }
+//       ]
+//     }
+//   };
   
 
 // track_grades.js
@@ -22,13 +22,18 @@ let currentUser = { name: "admin" };
 let currentUnit = null;
 let lineChart, pieChart;
 
-// get mock data form mockData.js
 window.onload = () => {
-    currentUser.units = mockData.admin.units;
-    currentUnit = currentUser.units[0];
-    updateView();
-  };
-  
+    fetch("/api/units")
+        .then(response => response.json())
+        .then(data => {
+            currentUser.units = data.units;
+            currentUnit = currentUser.units.length > 0 ? currentUser.units[0] : null;
+            updateView();
+        })
+        .catch(error => {
+            console.error("Failed to load units:", error);
+        });
+};
 
 function simulateAddUnit() {
   const name = prompt("unit name:", "New Unit");
