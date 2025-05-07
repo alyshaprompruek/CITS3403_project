@@ -2,6 +2,8 @@ from flask import render_template, request, redirect, session, url_for, flash
 from app.models import User, Unit, Task
 from app.forms import SignUpForm, LoginForm, AddUnitForm
 from app import application, db
+from datetime import datetime
+import logging
 
 
 @application.route('/')
@@ -89,7 +91,8 @@ def dashboard():
         
         # Check if user exists in database
         if user:
-            return render_template('dashboard.html', user=user)
+            current_year = datetime.now().year  # Get the current year
+            return render_template('dashboard.html', user=user, current_year=current_year)
         else:
             # User ID in session but not found in database - clear session and redirect
             session.pop("user_id", None)
@@ -144,6 +147,8 @@ def add_unit():
                 unit_code = form.unit_code.data
                 semester = form.semester.data
                 year = form.year.data
+                goal_grade = form.goal_grade.data
+                
 
                 # Check if the unit already exists for the user
                 existing_unit = Unit.query.filter_by(
@@ -151,6 +156,7 @@ def add_unit():
                     unit_code=unit_code,
                     semester=semester,
                     year=year,
+                    goal_grade=form.goal_grade.data,
                     user_id=user_id
                 ).first()
 
@@ -163,6 +169,7 @@ def add_unit():
                     unit_code=unit_code,
                     semester=semester,
                     year=year,
+                    goal_grade=form.goal_grade.data,
                     user_id=user_id
                 )
 
@@ -195,11 +202,42 @@ def update_unit():
         unit.unit_code = request.form["unit_code"]
         unit.year = request.form["year"]
         unit.semester = request.form["semester"]
+        unit.goal_grade = request.form["goal_grade"]  
 
         db.session.commit()
         flash("Unit updated successfully!", "success")
         return redirect(url_for("dashboard"))
     return redirect(url_for('homepage'))
+
+import logging
+
+@application.route('/api/delete_unit', methods=["POST"])
+def delete_unit():
+    if "user_id" in session:
+        user_id = session["user_id"]
+        unit_id = request.form.get("unit_id")
+
+        logging.info(f"Attempting to delete unit. User ID: {user_id}, Unit ID: {unit_id}")
+
+        # Query the unit to delete
+        unit = Unit.query.filter_by(id=unit_id, user_id=user_id).first()
+
+        if unit:
+            try:
+                db.session.delete(unit)
+                db.session.commit()
+                logging.info("Unit deleted successfully.")
+                return {"success": True}, 200
+            except Exception as e:
+                db.session.rollback()
+                logging.error(f"Error deleting unit: {e}")
+                return {"success": False, "error": "An error occurred while deleting the unit."}, 500
+        else:
+            logging.warning("Unit not found or unauthorized action.")
+            return {"success": False, "error": "Unit not found or unauthorized action."}, 404
+
+    logging.warning("Unauthorized access.")
+    return {"success": False, "error": "Unauthorized access."}, 401
 
 
 

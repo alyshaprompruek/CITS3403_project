@@ -47,6 +47,7 @@
                             <th scope="col">Year | Sem</th>
                             <th scope="col">Unit Name</th>
                             <th scope="col">Unit Code</th>
+                            <th scope="col">Goal Grade</th>
                             <th scope="col">Grade</th>
                             <th scope="col">Actions</th>
                         </tr>
@@ -59,8 +60,10 @@
                                     <td>{{ unit.year }} | Sem {{ unit.semester }}</td>
                                     <td>{{ unit.name }}</td>
                                     <td>{{ unit.unit_code }}</td>
+                                    <td>{{ unit.goal_grade | default('N/A', true) }}</td>
                                     <td>{{ unit.grade | default('N/A', true) }}</td>
                                     <td>
+                                        <!-- Edit Button -->
                                         <button class="btn btn-sm btn-outline-primary"
                                             data-bs-toggle="modal"
                                             data-bs-target="#editUnitModal"
@@ -69,15 +72,22 @@
                                             data-unit-code="{{ unit.unit_code }}"
                                             data-unit-grade="{{ unit.grade }}"
                                             data-unit-year="{{ unit.year }}"
-                                            data-unit-semester="{{ unit.semester }}">
+                                            data-unit-semester="{{ unit.semester }}"
+                                            data-goal-grade="{{ unit.goal_grade }}">
                                             ✏️ Edit
+                                        </button>
+                                    
+                                        <!-- Delete Button -->
+                                        <button class="btn btn-sm btn-outline-danger delete-unit-button"
+                                            data-unit-id="{{ unit.id }}">
+                                            🗑️ Delete
                                         </button>
                                     </td>
                                 </tr>
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="6" class="text-center">No units added yet. <a href="{{ url_for('settings') }}">Add a unit</a>.</td>
+                                <td colspan="7" class="text-center">No units added yet. <a href="{{ url_for('settings') }}">Add a unit</a>.</td>
                             </tr>
                         {% endif %}
                     </tbody>
@@ -111,22 +121,44 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <input type="hidden" name="unit_id" id="editUnitId">
+                    <input type="hidden" name="unit_id" id="editUnitId">
+
           <div class="mb-3">
             <label for="editUnitName" class="form-label">Unit Name</label>
             <input type="text" class="form-control" id="editUnitName" name="name" required>
           </div>
+
           <div class="mb-3">
             <label for="editUnitCode" class="form-label">Unit Code</label>
             <input type="text" class="form-control" id="editUnitCode" name="unit_code" required>
           </div>
-          <div class="mb-3">
-            <label for="editUnitYear" class="form-label">Year</label>
-            <input type="number" class="form-control" id="editUnitYear" name="year" required>
-          </div>
+
           <div class="mb-3">
             <label for="editUnitSemester" class="form-label">Semester</label>
-            <input type="text" class="form-control" id="editUnitSemester" name="semester" required>
+            <select class="form-select" id="editUnitSemester" name="semester" required>
+              <option value="1">1</option>
+              <option value="2">2</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="editUnitYear" class="form-label">Year of Completion</label>
+            <select class="form-select" id="editUnitYear" name="year" required>
+                {% for year in range(current_year - 5, current_year + 1) %}
+                  <option value="{{ year }}">{{ year }}</option>
+                {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="editGoalGrade" class="form-label">Goal Grade</label>
+            <select class="form-select" id="editGoalGrade" name="goal_grade" required>
+                <option value="HD">HD (Higher Distinction, 80-100%)</option>
+                <option value="D">D (Distinction, 70-79%)</option>
+                <option value="CR">CR (Credit Pass, 60-69%)</option>
+                <option value="P">P (Pass, 50-59%)</option>
+            </select>
+  
           </div>
         </div>
         <div class="modal-footer">
@@ -139,14 +171,47 @@
 
 <!-- Modal Script -->
 <script>
-  const editModal = document.getElementById('editUnitModal');
-  editModal.addEventListener('show.bs.modal', event => {
-    const button = event.relatedTarget;
-    document.getElementById('editUnitId').value = button.getAttribute('data-unit-id');
-    document.getElementById('editUnitName').value = button.getAttribute('data-unit-name');
-    document.getElementById('editUnitCode').value = button.getAttribute('data-unit-code');
-    document.getElementById('editUnitYear').value = button.getAttribute('data-unit-year');
-    document.getElementById('editUnitSemester').value = button.getAttribute('data-unit-semester');
-  });
+    const editModal = document.getElementById('editUnitModal');
+    editModal.addEventListener('show.bs.modal', event => {
+        const button = event.relatedTarget;
+        document.getElementById('editUnitId').value = button.getAttribute('data-unit-id');
+        document.getElementById('editUnitName').value = button.getAttribute('data-unit-name');
+        document.getElementById('editUnitCode').value = button.getAttribute('data-unit-code');
+        document.getElementById('editUnitSemester').value = button.getAttribute('data-unit-semester');
+        document.getElementById('editUnitYear').value = button.getAttribute('data-unit-year');
+        document.getElementById('editGoalGrade').value = button.getAttribute('data-goal-grade');
+    });
+
+    // Add event listener to delete buttons
+    document.querySelectorAll('.delete-unit-button').forEach(button => {
+        button.addEventListener('click', () => {
+            const unitId = button.getAttribute('data-unit-id');
+
+            if (confirm('Are you sure you want to delete this unit?')) {
+                fetch('/api/delete_unit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `unit_id=${unitId}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove the unit row from the table
+                        const unitRow = button.closest('tr');
+                        unitRow.remove();
+                        alert('Unit deleted successfully!');
+                    } else {
+                        alert(data.error || 'An error occurred while deleting the unit.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while deleting the unit.');
+                });
+            }
+        });
+    });
 </script>
 {% endblock %}

@@ -51,9 +51,13 @@
                 
                 <div class="mb-3">
                     {{ form.year.label(class="form-label") }}
-                    {{ form.year(class="form-control") }}
+                    {{ form.year(class="form-select") }}
                 </div>
-                
+                <div class="mb-3">
+                    {{ form.goal_grade.label(class="form-label") }}
+                    {{ form.goal_grade(class="form-select") }}
+                </div>
+            
                 <div class="d-grid">
                     {{ form.submit(class="btn btn-primary") }}
                 </div>
