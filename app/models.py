@@ -10,6 +10,7 @@ class Unit(db.Model):
     semester = db.Column(db.String(20), nullable=False)
     year = db.Column(db.Integer, nullable=False)
     name = db.Column(db.String(120), nullable=False)
+    unit_code = db.Column(db.String(20), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.student_id'), nullable=False)
     user = db.relationship('User', backref=db.backref('units', lazy=True))
 
