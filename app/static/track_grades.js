@@ -55,43 +55,57 @@ function selectUnit(unit) {
 }
 
 function updateView() {
-  const unitList = document.getElementById("unitList");
-  const noUnitBox = document.getElementById("noUnitBox");
-  const courseContent = document.getElementById("courseContent");
-  const currentTitle = document.getElementById("currentUnitTitle");
-  const tableBody = document.querySelector("#assessmentTable tbody");
+    const unitList = document.getElementById("unitList");
+    const noUnitBox = document.getElementById("noUnitBox");
+    const selectUnitBox = document.getElementById("selectUnitBox");
+    const courseContent = document.getElementById("courseContent");
+    const currentTitle = document.getElementById("currentUnitTitle");
+    const tableBody = document.querySelector("#assessmentTable tbody");
 
-  unitList.innerHTML = "";
-  currentUser.units.forEach(unit => {
-    const btn = document.createElement("button");
-    btn.textContent = unit.unit_name;
-    btn.onclick = () => selectUnit(unit);
-    unitList.appendChild(btn);
-  });
+    // Clear the unit list
+    unitList.innerHTML = "";
 
-  if (!currentUnit) {
-    noUnitBox.classList.remove("hidden");
-    courseContent.classList.add("hidden");
-  } else {
-    noUnitBox.classList.add("hidden");
-    courseContent.classList.remove("hidden");
-    currentTitle.textContent = currentUnit.unit_name;
-
-    tableBody.innerHTML = "";
-    currentUnit.assessments.forEach(a => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${a.task_name}</td>
-        <td>${a.score}</td>
-        <td>${a.weight}</td>
-        <td>${a.date}</td>
-        <td>${a.note}</td>
-      `;
-      tableBody.appendChild(row);
+    // Populate the unit list
+    currentUser.units.forEach(unit => {
+        const btn = document.createElement("button");
+        btn.textContent = unit.unit_name;
+        btn.className = "list-group-item list-group-item-action";
+        btn.onclick = () => selectUnit(unit);
+        unitList.appendChild(btn);
     });
 
-    renderCharts(currentUnit.assessments);
-  }
+    // Handle visibility of messages and content
+    if (currentUser.units.length === 0) {
+        noUnitBox.classList.remove("hidden");
+        selectUnitBox.classList.add("hidden");
+        courseContent.classList.add("hidden");
+    } else if (!currentUnit) {
+        noUnitBox.classList.add("hidden");
+        selectUnitBox.classList.remove("hidden");
+        courseContent.classList.add("hidden");
+    } else {
+        noUnitBox.classList.add("hidden");
+        selectUnitBox.classList.add("hidden");
+        courseContent.classList.remove("hidden");
+        currentTitle.textContent = currentUnit.unit_name;
+
+        // Populate the assessment table
+        tableBody.innerHTML = "";
+        currentUnit.assessments.forEach(a => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${a.task_name}</td>
+                <td>${a.score}</td>
+                <td>${a.weight}</td>
+                <td>${a.date}</td>
+                <td>${a.note}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        // Render charts
+        renderCharts(currentUnit.assessments);
+    }
 }
 
 function renderCharts(assessments) {
