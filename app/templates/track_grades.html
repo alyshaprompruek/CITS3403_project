@@ -25,10 +25,6 @@
                     <button class="btn btn-primary w-100 mt-3" onclick="simulateAddUnit()">Add Unit</button>
                 </div>
             </div>
-<<<<<<< HEAD
-            <button class="styled-button" onclick="openUnitModal()">Add Unit</button>
-=======
->>>>>>> c15e3796007fbb4f3dca9fc91cdfc15e8d1f5739
         </div>
 
         <!-- Right Panel -->
@@ -43,30 +39,10 @@
                         <p>No units added. Please add a unit to get started.</p>
                     </div>
 
-<<<<<<< HEAD
-            <div id="assessmentContent">
-                <table id="assessmentTable" class="styled-table">
-                    <thead>
-                        <tr>
-                            <th>Task Name</th>
-                            <th>Score</th>
-                            <th>Weight</th>
-                            <th>Date</th>
-                            <th>Note</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Assessment rows will be dynamically populated here -->
-                    </tbody>
-                </table>
-                <button class="styled-button" onclick="openAssessmentModal()">Add Assessment</button>
-            </div>
-=======
                     <!-- Message when units exist but none are selected -->
                     <div id="selectUnitBox" class="alert alert-warning text-center hidden">
                         <p>Please select a unit to display its details.</p>
                     </div>
->>>>>>> c15e3796007fbb4f3dca9fc91cdfc15e8d1f5739
 
                     <!-- Assessment content -->
                     <div id="assessmentContent">
@@ -95,51 +71,5 @@
             </div>
         </div>
     </div>
-<<<<<<< HEAD
-
-<!-- Modal for Adding Unit -->
-<div id="unitModal" class="modal hidden">
-  <div class="modal-content">
-    <h3>Add New Unit</h3>
-    <input type="text" id="unitNameInput" placeholder="Enter Unit Name" />
-    <br><br>
-    <button onclick="confirmAddUnit()">Confirm</button>
-    <button onclick="closeUnitModal()">Cancel</button>
-  </div>
 </div>
-
-<!-- Modal for Adding Assessment -->
-<div id="assessmentModal" class="modal hidden">
-  <div class="modal-content">
-    <h3>Add New Assessment</h3>
-    <input type="text" id="taskNameInput" placeholder="Task Name" /><br><br>
-    <input type="text" id="scoreInput" placeholder="Score (e.g., 85)" /><br><br>
-    <input type="text" id="weightInput" placeholder="Weight (e.g., 20%)" /><br><br>
-    <input type="date" id="dateInput" /><br><br>
-    <input type="text" id="noteInput" placeholder="Note (optional)" /><br><br>
-    <button onclick="confirmAddAssessment()">Confirm</button>
-    <button onclick="closeAssessmentModal()">Cancel</button>
-  </div>
-</div>
-
-<style>
-.modal {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: flex; align-items: center; justify-content: center;
-}
-.modal.hidden { display: none; }
-.modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  text-align: center;
-}
-</style>
-
-=======
-</div>
->>>>>>> c15e3796007fbb4f3dca9fc91cdfc15e8d1f5739
 {% endblock %}
