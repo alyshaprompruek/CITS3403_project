@@ -1,28 +1,49 @@
 {% extends "base.html" %}
 
 {% block head %}
-    <!-- Include the track_grades.js script here -->
-    <script src="{{ url_for('static', filename='track_grades.js') }}"></script>
+    <title>Track Grades</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="{{ url_for('static', filename='track_grades.js') }}"></script>
 {% endblock %}
 
 {% block body %}
-    <div id="container">
-        <div id="leftPanel">
-            <h2>Hi, {{ user.email }}! Track your assessments now.</h2>
-            <div id="unitList">
-                <!-- List of units will be dynamically populated here -->
+<div class="container py-5">
+    <h2 class="text-center mb-4">Track Your Grades</h2>
+
+    <!-- Left Panel -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Units</h5>
+                </div>
+                <div class="card-body">
+                    <div id="unitList" class="list-group">
+                        <!-- Units will be dynamically populated here -->
+                    </div>
+                    <button class="btn btn-primary w-100 mt-3" onclick="simulateAddUnit()">Add Unit</button>
+                </div>
             </div>
+<<<<<<< HEAD
             <button class="styled-button" onclick="openUnitModal()">Add Unit</button>
+=======
+>>>>>>> c15e3796007fbb4f3dca9fc91cdfc15e8d1f5739
         </div>
 
-        <div id="courseContent" class="hidden">
-            <h3 id="currentUnitTitle"></h3>
-            <div id="noUnitBox" class="hidden">
-                <p>No unit selected. Please add or select a unit.</p>
-            </div>
+        <!-- Right Panel -->
+        <div class="col-md-8">
+            <div id="courseContent" class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 id="currentUnitTitle" class="mb-0">Unit Details</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Message when no units are added -->
+                    <div id="noUnitBox" class="alert alert-info text-center">
+                        <p>No units added. Please add a unit to get started.</p>
+                    </div>
 
+<<<<<<< HEAD
             <div id="assessmentContent">
                 <table id="assessmentTable" class="styled-table">
                     <thead>
@@ -40,13 +61,41 @@
                 </table>
                 <button class="styled-button" onclick="openAssessmentModal()">Add Assessment</button>
             </div>
+=======
+                    <!-- Message when units exist but none are selected -->
+                    <div id="selectUnitBox" class="alert alert-warning text-center hidden">
+                        <p>Please select a unit to display its details.</p>
+                    </div>
+>>>>>>> c15e3796007fbb4f3dca9fc91cdfc15e8d1f5739
 
-            <div id="charts">
-                <canvas id="lineChart"></canvas>
-    
+                    <!-- Assessment content -->
+                    <div id="assessmentContent">
+                        <table id="assessmentTable" class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Task Name</th>
+                                    <th>Score</th>
+                                    <th>Weight</th>
+                                    <th>Date</th>
+                                    <th>Note</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Assessment rows will be dynamically populated here -->
+                            </tbody>
+                        </table>
+                        <button class="btn btn-primary mt-3" id="addAssessmentButton" onclick="addAssessment()">Add Assessment</button>
+                    </div>
+
+                    <!-- Charts -->
+                    <div id="charts" class="mt-4">
+                        <canvas id="lineChart"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+<<<<<<< HEAD
 
 <!-- Modal for Adding Unit -->
 <div id="unitModal" class="modal hidden">
@@ -90,4 +139,7 @@
 }
 </style>
 
+=======
+</div>
+>>>>>>> c15e3796007fbb4f3dca9fc91cdfc15e8d1f5739
 {% endblock %}

@@ -2,7 +2,10 @@
 .DS_Store
 
 # Python cache
+<<<<<<< HEAD
 *.pyc
+=======
+>>>>>>> c15e3796007fbb4f3dca9fc91cdfc15e8d1f5739
 __pycache__/
 *.py[cod]
 
