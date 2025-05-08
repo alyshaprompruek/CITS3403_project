@@ -278,3 +278,60 @@ def get_units():
         })
 
     return {"units": unit_list}
+
+
+# API endpoint to add a unit directly (bypassing form validation)
+@application.route('/api/add_unit_direct', methods=["POST"])
+def add_unit_direct():
+    if "user_id" not in session:
+        return {"error": "Unauthorized"}, 401
+
+    user_id = session["user_id"]
+    data = request.json
+    try:
+        new_unit = Unit(
+            name=data["unit_name"],
+            unit_code=data["unit_name"],  # assuming no unit code field in modal
+            semester="N/A",
+            year="2025",
+            user_id=user_id,
+            target_score=data.get("target_score", 80),
+            outline_url=""
+        )
+        db.session.add(new_unit)
+        db.session.commit()
+        return {"success": True, "unit_id": new_unit.id}
+    except Exception as e:
+        db.session.rollback()
+        return {"success": False, "error": str(e)}, 500
+
+
+# API endpoint to add an assessment/task directly
+@application.route('/api/add_assessment', methods=["POST"])
+def add_assessment():
+    if "user_id" not in session:
+        return {"error": "Unauthorized"}, 401
+
+    user_id = session["user_id"]
+    data = request.json
+    try:
+        # Temporary default value for `type` field to avoid database constraint errors.
+        # TODO: Replace with user-selected type from frontend (e.g., exam, assignment, etc.)
+        new_task = Task(
+            user_id=user_id,
+            unit_id=data["unit_id"],
+            task_name=data["task_name"],
+            grade=data["score"],
+            weighting=float(data["weight"].strip('%')),
+            date=data["date"],
+            notes=data.get("note", ""),
+            type="assessment"
+        )
+        db.session.add(new_task)
+        db.session.commit()
+        return {"success": True}
+    except Exception as e:
+        import sys
+        print("Assessment API error:", e, file=sys.stderr)
+        db.session.rollback()
+        return {"success": False, "error": str(e)}, 500

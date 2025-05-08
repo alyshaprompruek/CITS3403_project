@@ -146,16 +146,36 @@ function confirmAddUnit() {
         return;
     }
 
-    const unit = {
-        unit_id: "u" + (currentUser.units.length + 1),
-        unit_name: name,
-        target_score: 80,
-        assessments: []
-    };
-    currentUser.units.push(unit);
-    selectUnit(unit);
-    updateView();
-    closeUnitModal();
+    fetch("/api/add_unit_direct", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            unit_name: name,
+            target_score: 80
+        })
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            const unit = {
+                unit_id: result.unit_id,
+                unit_name: name,
+                target_score: 80,
+                assessments: []
+            };
+            currentUser.units.push(unit);
+            selectUnit(unit);
+            updateView();
+            closeUnitModal();
+        } else {
+            alert("Failed to add unit.");
+        }
+    })
+    .catch(err => {
+        console.error("Error adding unit:", err);
+    });
 }
 
 function openAssessmentModal() {
@@ -178,15 +198,38 @@ function confirmAddAssessment() {
         return;
     }
 
-    const newAssessment = {
-        task_name: taskName,
-        score: score,
-        weight: weight,
-        date: date,
-        note: note
-    };
-
-    currentUnit.assessments.push(newAssessment);
-    updateView();
-    closeAssessmentModal();
+    fetch("/api/add_assessment", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            unit_id: currentUnit.unit_id,
+            task_name: taskName,
+            score: score,
+            weight: weight,
+            date: date,
+            note: note
+        })
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            const newAssessment = {
+                task_name: taskName,
+                score: score,
+                weight: weight,
+                date: date,
+                note: note
+            };
+            currentUnit.assessments.push(newAssessment);
+            updateView();
+            closeAssessmentModal();
+        } else {
+            alert("Failed to add assessment.");
+        }
+    })
+    .catch(err => {
+        console.error("Error adding assessment:", err);
+    });
 }
