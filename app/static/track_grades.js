@@ -35,20 +35,6 @@ window.onload = () => {
         });
 };
 
-function simulateAddUnit() {
-  const name = prompt("unit name:", "New Unit");
-  if (!name || name.trim() === "") return;
-  const unit = {
-    unit_id: "u" + (currentUser.units.length + 1),
-    unit_name: name.trim(),
-    target_score: 80,
-    assessments: []
-  };
-  currentUser.units.push(unit);
-  selectUnit(unit);
-  updateView();
-}
-
 function selectUnit(unit) {
   currentUnit = unit;
   updateView();
@@ -145,12 +131,47 @@ function renderCharts(assessments) {
 
 }
 
-function addAssessment() {
-    const taskName = prompt("Enter Task Name:");
-    const score = prompt("Enter Score (e.g., 85):");
-    const weight = prompt("Enter Weight (e.g., 20%):");
-    const date = prompt("Enter Date (YYYY-MM-DD):");
-    const note = prompt("Enter Note (optional):");
+function openUnitModal() {
+    document.getElementById("unitModal").classList.remove("hidden");
+}
+
+function closeUnitModal() {
+    document.getElementById("unitModal").classList.add("hidden");
+}
+
+function confirmAddUnit() {
+    const name = document.getElementById("unitNameInput").value.trim();
+    if (!name) {
+        alert("Unit name cannot be empty.");
+        return;
+    }
+
+    const unit = {
+        unit_id: "u" + (currentUser.units.length + 1),
+        unit_name: name,
+        target_score: 80,
+        assessments: []
+    };
+    currentUser.units.push(unit);
+    selectUnit(unit);
+    updateView();
+    closeUnitModal();
+}
+
+function openAssessmentModal() {
+    document.getElementById("assessmentModal").classList.remove("hidden");
+}
+
+function closeAssessmentModal() {
+    document.getElementById("assessmentModal").classList.add("hidden");
+}
+
+function confirmAddAssessment() {
+    const taskName = document.getElementById("taskNameInput").value.trim();
+    const score = document.getElementById("scoreInput").value.trim();
+    const weight = document.getElementById("weightInput").value.trim();
+    const date = document.getElementById("dateInput").value.trim();
+    const note = document.getElementById("noteInput").value.trim();
 
     if (!taskName || !score || !weight || !date) {
         alert("All fields except 'Note' are required!");
@@ -158,13 +179,14 @@ function addAssessment() {
     }
 
     const newAssessment = {
-        task_name: taskName.trim(),
-        score: score.trim(),
-        weight: weight.trim(),
-        date: date.trim(),
-        note: note ? note.trim() : ""
+        task_name: taskName,
+        score: score,
+        weight: weight,
+        date: date,
+        note: note
     };
 
     currentUnit.assessments.push(newAssessment);
-    updateView(); // Refresh the view to include the new assessment
+    updateView();
+    closeAssessmentModal();
 }
