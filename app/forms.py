@@ -23,6 +23,8 @@ class AddUnitForm(FlaskForm):
     current_year = datetime.now().year
    # Define the last 5 years as options for the user
     year_choices = [(str(year), str(year)) for year in range(current_year - 5, current_year + 1)]
+    
+    
 
     year = SelectField('Year of Completion', choices=year_choices, default=str(current_year), validators=[DataRequired()])
     submit = SubmitField('Add Unit')

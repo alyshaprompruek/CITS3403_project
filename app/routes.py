@@ -222,7 +222,30 @@ def update_unit():
         return redirect(url_for("dashboard"))
     return redirect(url_for('homepage'))
 
+@application.route('/api/delete_unit', methods=["POST"])
+def delete_unit():
+    if "user_id" in session:
+        user_id = session["user_id"]
+        unit_id = request.form.get("unit_id")
 
+        # Query the unit to ensure it belongs to the logged-in user
+        unit = Unit.query.filter_by(id=unit_id, user_id=user_id).first()
+        if not unit:
+            flash("Unauthorized or invalid unit.", "danger")
+            return redirect(url_for("dashboard"))
+
+        try:
+            # Delete the unit and its associated tasks
+            Task.query.filter_by(unit_id=unit.id).delete()
+            db.session.delete(unit)
+            db.session.commit()
+            flash("Unit deleted successfully!", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"An error occurred: {str(e)}", "danger")
+
+        return redirect(url_for("dashboard"))
+    return redirect(url_for("homepage"))
 
 @application.route('/api/logout', methods=["POST"])
 def logout():
