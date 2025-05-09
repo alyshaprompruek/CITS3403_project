@@ -7,7 +7,13 @@ from datetime import datetime
 
 class SignUpForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
+    password = PasswordField(
+        'Password', 
+        validators=[
+            DataRequired(),
+            Length(min=6, message="Password must be at least 6 characters long.")
+        ]
+    )
     submit = SubmitField('Sign Up')
     
 class LoginForm(FlaskForm):

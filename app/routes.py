@@ -15,9 +15,7 @@ def signup():
     form = SignUpForm()
     error = None
     
-    if request.method == "GET":
-        return render_template('signup.html', form=form, error=error)
-    elif request.method == "POST":
+    if request.method == "POST":
         if form.validate_on_submit():
             try:
                 email = form.email.data
@@ -29,24 +27,31 @@ def signup():
                     error = "Email already registered. Please use a different email or login."
                     return render_template('signup.html', form=form, error=error)
 
+                # Enforce password hashing
+                if len(password) < 6:
+                    error = "Password must be at least 6 characters long."
+                    return render_template('signup.html', form=form, error=error)
+
+                # Create new user with hashed password
                 new_user = User(email=email)
                 new_user.set_password(password)
 
                 db.session.add(new_user)
-                db.session.commit()  # Commit to generate the student_id
+                db.session.commit()
 
-                session["user_id"] = new_user.id
+                # Store student_id in session
+                session["user_id"] = new_user.student_id
                 return redirect(url_for('dashboard'))
             
             except Exception as e:
-                db.session.rollback()  # Roll back if there's an error
+                db.session.rollback()
                 error = f"An error occurred during registration: {str(e)}"
-                
+        
         else:
-            # Form validation failed
             error = "Please check your information and try again."
             
-        return render_template('signup.html', form=form, error=error)
+    return render_template('signup.html', form=form, error=error)
+
 
 @application.route('/login', methods=["POST", "GET"])
 def login():
