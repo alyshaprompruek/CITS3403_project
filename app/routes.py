@@ -2,6 +2,7 @@ from flask import render_template, request, redirect, session, url_for, flash
 from app.models import User, Unit, Task
 from app.forms import SignUpForm, LoginForm, AddUnitForm
 from app import application, db
+from app.services.analytics import calculate_user_statistics
 
 
 @application.route('/')
@@ -89,7 +90,20 @@ def dashboard():
         
         # Check if user exists in database
         if user:
-            return render_template('dashboard.html', user=user)
+            stats = calculate_user_statistics(user_id)
+            print(">>> unit_scores:", stats["unit_scores"])
+            print(">>> recommendations:", stats["recommendations"])
+            print(">>> top_unit:", stats["top_unit"])
+            print(">>> wam:", stats["wam"])
+
+            user.wam = stats["wam"]
+            user.gpa = stats["gpa"]
+            user.top_unit = stats["top_unit"]
+
+            return render_template("dashboard.html", user=user, unit_scores=stats["unit_scores"],
+                                   recommendations=stats["recommendations"],
+                                   ranked_units=stats["ranked_units"]
+                                   )
         else:
             # User ID in session but not found in database - clear session and redirect
             session.pop("user_id", None)
@@ -145,6 +159,9 @@ def add_unit():
                 semester = form.semester.data
                 year = form.year.data
 
+                target_score = request.form.get("target_score", None)
+                outline_url = request.form.get("outline_url", None)
+
                 # Check if the unit already exists for the user
                 existing_unit = Unit.query.filter_by(
                     name=name,
@@ -159,11 +176,13 @@ def add_unit():
                     return render_template('settings.html', user=user, form=form, error=error)
 
                 new_unit = Unit(
-                    name=name, 
+                    name=name,
                     unit_code=unit_code,
                     semester=semester,
                     year=year,
-                    user_id=user_id
+                    user_id=user_id,
+                    target_score=target_score,
+                    outline_url=outline_url
                 )
 
                 db.session.add(new_unit)
@@ -195,6 +214,8 @@ def update_unit():
         unit.unit_code = request.form["unit_code"]
         unit.year = request.form["year"]
         unit.semester = request.form["semester"]
+        unit.target_score = request.form.get("target_score", unit.target_score)
+        unit.outline_url = request.form.get("outline_url", unit.outline_url)
 
         db.session.commit()
         flash("Unit updated successfully!", "success")
@@ -223,3 +244,94 @@ def debug_db():
             "users": [str(user) for user in users],
             "units": [str(unit) for unit in units]
         }
+
+
+# API endpoint to serve units and their tasks for the logged-in user
+@application.route("/api/units")
+def get_units():
+    if "user_id" not in session:
+        return {"error": "Unauthorized"}, 401
+
+    user_id = session["user_id"]
+    user = User.query.get(user_id)
+    if not user:
+        return {"error": "User not found"}, 404
+
+    unit_list = []
+    for unit in Unit.query.filter_by(user_id=user_id).all():
+        tasks = Task.query.filter_by(user_id=user_id, unit_id=unit.id).all()
+        assessments = []
+        for task in tasks:
+            assessments.append({
+                "task_name": task.task_name,
+                "score": str(task.grade),
+                "weight": f"{task.weighting}%",
+                "date": task.date,
+                "note": task.notes
+            })
+
+        unit_list.append({
+            "unit_id": unit.id,
+            "unit_name": unit.unit_code,
+            "target_score": unit.target_score,
+            "assessments": assessments
+        })
+
+    return {"units": unit_list}
+
+
+# API endpoint to add a unit directly (bypassing form validation)
+@application.route('/api/add_unit_direct', methods=["POST"])
+def add_unit_direct():
+    if "user_id" not in session:
+        return {"error": "Unauthorized"}, 401
+
+    user_id = session["user_id"]
+    data = request.json
+    try:
+        new_unit = Unit(
+            name=data["unit_name"],
+            unit_code=data["unit_name"],  # assuming no unit code field in modal
+            semester="N/A",
+            year="2025",
+            user_id=user_id,
+            target_score=data.get("target_score", 80),
+            outline_url=""
+        )
+        db.session.add(new_unit)
+        db.session.commit()
+        return {"success": True, "unit_id": new_unit.id}
+    except Exception as e:
+        db.session.rollback()
+        return {"success": False, "error": str(e)}, 500
+
+
+# API endpoint to add an assessment/task directly
+@application.route('/api/add_assessment', methods=["POST"])
+def add_assessment():
+    if "user_id" not in session:
+        return {"error": "Unauthorized"}, 401
+
+    user_id = session["user_id"]
+    data = request.json
+    try:
+        # Temporary default value for `type` field to avoid database constraint errors.
+        # TODO: Replace with user-selected type from frontend (e.g., exam, assignment, etc.)
+        new_task = Task(
+            user_id=user_id,
+            unit_id=data["unit_id"],
+            task_name=data["task_name"],
+            grade=data["score"],
+            weighting=float(data["weight"].strip('%')),
+            date=data["date"],
+            notes=data.get("note", ""),
+            type="assessment"
+        )
+        db.session.add(new_task)
+        db.session.commit()
+        return {"success": True}
+    except Exception as e:
+        import sys
+        print("Assessment API error:", e, file=sys.stderr)
+        db.session.rollback()
+        return {"success": False, "error": str(e)}, 500

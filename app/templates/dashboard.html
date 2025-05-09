@@ -33,17 +33,17 @@
         </div>
     </div>
 
-    <!-- Rankings Table -->
+    <!-- Units Table -->
     <div class="card mb-4">
         <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Unit Rankings</h5>
+            <h5 class="mb-0">Units</h5>
         </div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
                     <thead class="thead-light">
                         <tr>
-                            <th scope="col">#</th>
+                            <th scope="col">Rank</th>
                             <th scope="col">Year | Sem</th>
                             <th scope="col">Unit Name</th>
                             <th scope="col">Unit Code</th>
@@ -52,39 +52,68 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% if user.units %}
-                            {% for unit in user.units %}
-                                <tr>
-                                    <td>{{ loop.index }}</td>
-                                    <td>{{ unit.year }} | Sem {{ unit.semester }}</td>
-                                    <td>{{ unit.name }}</td>
-                                    <td>{{ unit.unit_code }}</td>
-                                    <td>{{ unit.grade | default('N/A', true) }}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#editUnitModal"
-                                            data-unit-id="{{ unit.id }}"
-                                            data-unit-name="{{ unit.name }}"
-                                            data-unit-code="{{ unit.unit_code }}"
-                                            data-unit-grade="{{ unit.grade }}"
-                                            data-unit-year="{{ unit.year }}"
-                                            data-unit-semester="{{ unit.semester }}">
-                                            ✏️ Edit
-                                        </button>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        {% else %}
-                            <tr>
-                                <td colspan="6" class="text-center">No units added yet. <a href="{{ url_for('settings') }}">Add a unit</a>.</td>
-                            </tr>
-                        {% endif %}
+                        {% for item in unit_scores %}
+                          {% set unit = item.unit %}
+                          <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ unit.year }} | Sem {{ unit.semester }}</td>
+                            <td>{{ unit.name }}</td>
+                            <td>{{ unit.unit_code }}</td>
+                            <td>{{ item.score | default('N/A', true) }}</td>
+                            <td>
+                              <button class="btn btn-sm btn-outline-primary"
+                                  data-bs-toggle="modal"
+                                  data-bs-target="#editUnitModal"
+                                  data-unit-id="{{ unit.id }}"
+                                  data-unit-name="{{ unit.name }}"
+                                  data-unit-code="{{ unit.unit_code }}"
+                                  data-unit-grade="{{ item.score }}"
+                                  data-unit-year="{{ unit.year }}"
+                                  data-unit-semester="{{ unit.semester }}">
+                                  ✏️ Edit
+                              </button>
+                            </td>
+                          </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+
+    <!-- Recommendations Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Target Recommendations</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr>
+                            <th>Unit</th>
+                            <th>Target Score</th>
+                            <th>Current Score</th>
+                            <th>Remaining Weight (%)</th>
+                            <th>Required Avg in Remaining</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rec in recommendations %}
+                        <tr>
+                            <td>{{ rec.unit_code }}</td>
+                            <td>{{ rec.target }}</td>
+                            <td>{{ rec.current_score }}</td>
+                            <td>{{ rec.remaining_weight }}</td>
+                            <td>{{ rec.required_score | default('N/A', true) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Progress Analysis Section -->
     <div class="card">
