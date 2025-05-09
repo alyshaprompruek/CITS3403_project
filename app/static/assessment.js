@@ -28,3 +28,9 @@ function addCourse() {
     courses.push(newCourse); // Assuming you have a `courses` array
     updateCourseView(); // Custom function to re-render or show the course
 }
+
+// Add the simulateAddUnit function here
+function simulateAddUnit() {
+    console.log("simulateAddUnit function triggered");
+    // Add your logic for adding a unit here
+}
