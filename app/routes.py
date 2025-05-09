@@ -112,22 +112,6 @@ def dashboard():
 @application.route('/track_grades')
 def track_grades():
     if "user_id" in session: 
-        user_id = session["user_id"]
-        
-        # Query the database to get the complete user object
-        user = User.query.get(user_id)
-        
-        # Check if user exists in database
-        if user:
-            return render_template('track_grades.html', user=user)
-        else:
-            # User ID in session but not found in database - clear session and redirect
-            session.pop("user_id", None)
-    return redirect(url_for('homepage'))
-
-@application.route('/settings')
-def settings():
-    if "user_id" in session: 
         form = AddUnitForm()
         user_id = session["user_id"]
         
@@ -136,7 +120,23 @@ def settings():
         
         # Check if user exists in database
         if user:
-            return render_template('settings.html', user=user, form=form)
+            return render_template('track_grades.html', user=user, form=form)
+        else:
+            # User ID in session but not found in database - clear session and redirect
+            session.pop("user_id", None)
+    return redirect(url_for('homepage'))
+
+@application.route('/settings')
+def settings():
+    if "user_id" in session: 
+        user_id = session["user_id"]
+        
+        # Query the database to get the complete user object
+        user = User.query.get(user_id)
+        
+        # Check if user exists in database
+        if user:
+            return render_template('settings.html', user=user)
         else:
             # User ID in session but not found in database - clear session and redirect
             session.pop("user_id", None)
@@ -173,7 +173,7 @@ def add_unit():
 
                 if existing_unit:
                     error = "This unit has already been added."
-                    return render_template('settings.html', user=user, form=form, error=error)
+                    return render_template('track_grades.html', user=user, form=form, error=error)
 
                 new_unit = Unit(
                     name=name,
@@ -188,7 +188,7 @@ def add_unit():
                 db.session.add(new_unit)
                 db.session.commit()  # Commit to save the new unit
 
-                return render_template('settings.html', user=user, form=form, success="Unit added successfully")
+                return render_template('track_grades.html', user=user, form=form, success="Unit added successfully")
             except Exception as e:
                 db.session.rollback()
                 error = "Please try again later, an error occurred"
@@ -280,31 +280,6 @@ def get_units():
     return {"units": unit_list}
 
 
-# API endpoint to add a unit directly (bypassing form validation)
-@application.route('/api/add_unit_direct', methods=["POST"])
-def add_unit_direct():
-    if "user_id" not in session:
-        return {"error": "Unauthorized"}, 401
-
-    user_id = session["user_id"]
-    data = request.json
-    try:
-        new_unit = Unit(
-            name=data["unit_name"],
-            unit_code=data["unit_name"],  # assuming no unit code field in modal
-            semester="N/A",
-            year="2025",
-            user_id=user_id,
-            target_score=data.get("target_score", 80),
-            outline_url=""
-        )
-        db.session.add(new_unit)
-        db.session.commit()
-        return {"success": True, "unit_id": new_unit.id}
-    except Exception as e:
-        db.session.rollback()
-        return {"success": False, "error": str(e)}, 500
-
 
 # API endpoint to add an assessment/task directly
 @application.route('/api/add_assessment', methods=["POST"])
@@ -325,13 +300,12 @@ def add_assessment():
             weighting=float(data["weight"].strip('%')),
             date=data["date"],
             notes=data.get("note", ""),
-            type="assessment"
+            type=data["type"] if "type" in data else "other"  # Default to 'other' if not provided
         )
         db.session.add(new_task)
         db.session.commit()
         return {"success": True}
     except Exception as e:
         import sys
-        print("Assessment API error:", e, file=sys.stderr)
         db.session.rollback()
         return {"success": False, "error": str(e)}, 500

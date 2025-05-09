@@ -11,55 +11,6 @@
 
         <p class="text-center">Email: <strong>{{ user.email }}</strong></p>
 
-        <!-- Display error message if present -->
-        {% if error %}
-            <div class="alert alert-danger" role="alert">
-                {{ error }}
-            </div>
-        {% endif %}
-
-        <!-- Display success message if present -->
-        {% if success %}
-            <div class="alert alert-success" role="alert">
-                {{ success }}
-            </div>
-        {% endif %}
-
-        <!-- Add Unit Form -->
-        <div class="mt-4">
-            <h4 class="mb-1">Add New Unit</h4>
-            <p class="text-muted mb-3" style="font-size: 0.9rem;">
-                You can update unit details later from the <a href="{{ url_for('dashboard') }}">dashboard</a>.
-            </p>
-            <form action="{{ url_for('add_unit') }}" method="post">
-                {{ form.csrf_token }}
-                
-                <div class="mb-3">
-                    {{ form.name.label(class="form-label") }}
-                    {{ form.name(class="form-control") }}
-                </div>
-                
-                <div class="mb-3">
-                    {{ form.unit_code.label(class="form-label") }}
-                    {{ form.unit_code(class="form-control") }}
-                </div>
-                
-                <div class="mb-3">
-                    {{ form.semester.label(class="form-label") }}
-                    {{ form.semester(class="form-select") }}
-                </div>
-                
-                <div class="mb-3">
-                    {{ form.year.label(class="form-label") }}
-                    {{ form.year(class="form-control") }}
-                </div>
-                
-                <div class="d-grid">
-                    {{ form.submit(class="btn btn-primary") }}
-                </div>
-            </form>
-        </div>
-
 
         <hr class="my-4">
 
