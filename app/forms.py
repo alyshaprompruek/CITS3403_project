@@ -4,6 +4,7 @@ from wtforms.validators import DataRequired, Email, Length
 from datetime import datetime
 
 
+
 class SignUpForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])

@@ -10,7 +10,7 @@ def homepage():
     user_id = session.get("user_id", None)
     return render_template('homepage.html', user_id=user_id)
 
-@application.route('/signup', methods=["POST", "GET"])
+@application.route('/signup', methods=["GET", "POST"])
 def signup():
     form = SignUpForm()
     error = None
@@ -29,15 +29,13 @@ def signup():
                     error = "Email already registered. Please use a different email or login."
                     return render_template('signup.html', form=form, error=error)
 
-                new_user = User(
-                    email=email, 
-                    password=password
-                )
+                new_user = User(email=email)
+                new_user.set_password(password)
 
                 db.session.add(new_user)
                 db.session.commit()  # Commit to generate the student_id
 
-                session["user_id"] = new_user.student_id
+                session["user_id"] = new_user.id
                 return redirect(url_for('dashboard'))
             
             except Exception as e:
@@ -67,8 +65,8 @@ def login():
                 user = User.query.filter_by(email=email).first()
                 
                 # Check if user exists and password matches
-                if user and user.password == password: #not any hashing done yet
-                    session["user_id"] = user.student_id
+                if user and user.check_password(password): 
+                    session["user_id"] = user.id
                     return redirect(url_for('dashboard'))
                 else:
                     error = "Invalid email or password."

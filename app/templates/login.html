@@ -9,7 +9,6 @@
         <div class="card p-4 shadow-sm" style="min-width: 300px; max-width: 400px; width: 100%;">
             <h2 class="text-center mb-4">Login</h2>
 
-            <!-- Display error message if present -->
             {% if error %}
                 <div class="alert alert-danger" role="alert">
                     {{ error }}
@@ -21,18 +20,26 @@
 
                 <div class="mb-3">
                     {{ form.email.label(class="form-label") }}
-                    {{ form.email(class="form-control") }}
+                    {{ form.email(class="form-control", autocomplete="email") }}
                 </div>
 
                 <div class="mb-3">
                     {{ form.password.label(class="form-label") }}
-                    {{ form.password(class="form-control") }}
+                    {{ form.password(class="form-control", autocomplete="current-password") }}
+                </div>
+
+                <div class="text-end mb-3">
+                    <a href="#" class="text-muted" style="font-size: 0.9rem;">Forgot password?</a>
                 </div>
 
                 <div class="d-grid">
                     {{ form.submit(class="btn btn-primary") }}
                 </div>
             </form>
+
+            <div class="text-center mt-3">
+                <span>Don't have an account?</span> <a href="{{ url_for('signup') }}">Sign up</a>
+            </div>
         </div>
     </div>
 {% endblock %}
