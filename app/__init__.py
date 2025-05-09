@@ -9,4 +9,3 @@ application.register_blueprint(courses_api, url_prefix="/api")
 
 import app.routes
 
-

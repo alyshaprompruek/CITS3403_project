@@ -1,36 +1,50 @@
 from flask import render_template, request, redirect, session, url_for
 from app.models import user
-from app.forms import SignUpForm
+from app.forms import SignUpForm, LoginForm
 from app import application 
 
+users = []  # Temporary list to store users
 
 @application.route('/')
 def homepage():
-    #searches for index.html in the templates folder
-    return render_template('homepage.html', user=None)
+    user = session.get("user", None)
+    return render_template('homepage.html', user=user)
 
-@application.route('/signup', methods=["POST","GET"])
+@application.route('/signup', methods=["POST", "GET"])
 def signup():
     form = SignUpForm()
     if request.method == "GET":
         return render_template('signup.html', SignUpForm=form)
     elif request.method == "POST":
         if form.validate_on_submit():
-                email = form.email.data
-                password = form.password.data
-                role = form.role.data
+            email = form.email.data
+            password = form.password.data
 
-                # Create a new user instance
-                new_user = user(
-                    email=email, 
-                    studentBoolean=(role=='Student'), 
-                    password=password
-                )
+            new_user = user(
+                email=email, 
+                password=password
+            )
 
+            users.append(new_user)
+            session["user"] = new_user.to_dict()
+            return redirect(url_for('dashboard'))
 
-                session["user"] = new_user.to_dict()
+@application.route('/login', methods=["POST", "GET"])
+def login():
+    form = LoginForm()
+    if request.method == "GET":
+        return render_template('login.html', form=form)
+    elif request.method == "POST":
+        if form.validate_on_submit():
+            email = form.email.data
+            password = form.password.data
 
-                return redirect(url_for('dashboarda'))
+            for user in users:
+                if user.email == email and user.password == password:
+                    session["user"] = user.to_dict()
+                    return redirect(url_for('dashboard'))
+            
+            return render_template('login.html', form=form, error="Invalid email or password.")
 
 @application.route('/dashboarda')
 def dashboarda():
@@ -40,12 +54,23 @@ def dashboarda():
     else:
         return redirect(url_for('homepage'))
 
-@application.route("/dashboard")
-def dashboard():
-    return render_template("dashboard.html")
+@application.route('/track_grades')
+def track_grades():
+    if "user" in session:
+        user = session["user"]
+        return render_template('track_grades.html', user=user)
+    else:
+        return redirect(url_for('homepage'))
 
-@application.route("/course")
-def course():
-    return render_template("course.html")
+@application.route('/settings')
+def settings():
+    if "user" in session:
+        user = session["user"]
+        return render_template('settings.html', user=user)
+    else:
+        return redirect(url_for('homepage'))
 
-
+@application.route('/api/logout', methods=["POST"])
+def logout():
+    session.pop("user", None)
+    return redirect(url_for('homepage'))

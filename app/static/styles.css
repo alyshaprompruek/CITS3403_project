@@ -108,6 +108,26 @@ main {
     color: #cccccc;
 }
 
+/* Track Grades Page */
+#lineChart {
+    background-color: white;
+}
+
+#addAssessmentButton {
+    margin-top: 1rem;
+    padding: 0.8rem 1.5rem;
+    background: var(--secondary-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+#addAssessmentButton:hover {
+    background: var(--secondary-color-hover);
+}
+
 /* Footer */
 footer {
     text-align: center;
@@ -181,6 +201,61 @@ button {
     font-family: var(--font-family);
 }
 
+.styled-button {
+    margin-top: 1rem;
+    padding: 0.8rem 1.5rem;
+    background: var(--secondary-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background 0.3s ease;
+}
+
+.styled-button:hover {
+    background: var(--secondary-color-hover);
+}
+
+/* Table styling */
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 1rem;
+    text-align: left;
+    background-color: #2a2a40;
+    color: var(--text-color);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.styled-table thead tr {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    text-align: left;
+    font-weight: bold;
+}
+
+.styled-table th, .styled-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #ddd;
+}
+
+.styled-table tbody tr:nth-child(even) {
+    background-color: #1c1f24;
+}
+
+.styled-table tbody tr:hover {
+    background-color: var(--secondary-color-hover);
+    color: var(--text-color);
+}
+
+.styled-table tbody tr:last-of-type {
+    border-bottom: 2px solid var(--secondary-color);
+}
 
 /* Animations */
 @keyframes fadeIn {

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block head %}
+<title>Settings</title>
+{% endblock %}
+
+{% block body %}
+<!-- Hero Section -->
+<p> This is settings, {{ user.email }}!</p>
+<!-- Logout Button -->
+<form action="{{ url_for('logout') }}" method="post">
+    <button type="submit" class="btn btn-danger">Logout</button>
+</form>
+{% endblock %}
