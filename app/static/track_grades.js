@@ -206,6 +206,7 @@ function confirmAddAssessment() {
     const weight = document.getElementById("weightInput").value.trim();
     const date = document.getElementById("dateInput").value.trim();
     const note = document.getElementById("noteInput").value.trim();
+    const type = document.getElementById("assessmentTypeDropdown").value.trim();
 
     if (!taskName || !score || !weight || !date) {
         alert("All fields except 'Note' are required!");
@@ -234,7 +235,8 @@ function confirmAddAssessment() {
                 score: score,
                 weight: weight,
                 date: date,
-                note: note
+                note: note,
+                type: type
             };
             currentUnit.assessments.push(newAssessment);
             updateView();
