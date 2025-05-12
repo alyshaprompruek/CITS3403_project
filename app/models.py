@@ -17,7 +17,7 @@ class User(db.Model):
                 "Password must be at least 8 characters long, include an uppercase letter, a number, and a special character."
             )
 
-        # Internally store the hashed password
+        # Store the hashed password
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
@@ -36,7 +36,8 @@ class User(db.Model):
 
     def __repr__(self):
         return f"<User {self.email}>"
-    
+
+
 class Unit(db.Model):
     unit_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     semester = db.Column(db.String(20), nullable=False)
@@ -53,6 +54,7 @@ class Unit(db.Model):
     def __repr__(self):
         return f"<Unit {self.unit_code} ({self.name})>"
 
+
 class Task(db.Model):
     task_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.student_id'), nullable=False)
@@ -64,11 +66,9 @@ class Task(db.Model):
     task_name = db.Column(db.String(120), nullable=True)
     date = db.Column(db.String(20), nullable=True)
 
+    # Establish relationships
     user = db.relationship('User', backref=db.backref('tasks', lazy=True))
     unit = db.relationship('Unit', backref=db.backref('tasks', lazy=True))
 
     def __repr__(self):
         return f"<Task {self.task_name} for Unit {self.unit.unit_code}>"
-
-
-
