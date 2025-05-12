@@ -15,43 +15,37 @@ def signup():
     form = SignUpForm()
     error = None
     
-    if request.method == "POST":
-        if form.validate_on_submit():
+    if form.validate_on_submit():
+        try:
+            email = form.email.data
+            password = form.password.data
+
+            # Check if the email is already registered
+            if User.query.filter_by(email=email).first():
+                error = "This email is already registered. Please use a different email or log in."
+                return render_template('signup.html', form=form, error=error)
+
+            # Create a new user with a secure password
+            new_user = User(email=email)
             try:
-                email = form.email.data
-                password = form.password.data
-
-                # Check if user already exists
-                existing_user = User.query.filter_by(email=email).first()
-                if existing_user:
-                    error = "Email already registered. Please use a different email or login."
-                    return render_template('signup.html', form=form, error=error)
-
-                # Enforce password hashing
-                if len(password) < 6:
-                    error = "Password must be at least 6 characters long."
-                    return render_template('signup.html', form=form, error=error)
-
-                # Create new user with hashed password
-                new_user = User(email=email)
                 new_user.set_password(password)
+            except ValueError as e:
+                error = str(e)
+                return render_template('signup.html', form=form, error=error)
 
-                db.session.add(new_user)
-                db.session.commit()
+            # Save the new user to the database
+            db.session.add(new_user)
+            db.session.commit()
 
-                # Store student_id in session
-                session["user_id"] = new_user.student_id
-                return redirect(url_for('dashboard'))
-            
-            except Exception as e:
-                db.session.rollback()
-                error = f"An error occurred during registration: {str(e)}"
+            # Log the user in
+            session["user_id"] = new_user.student_id
+            return redirect(url_for('dashboard'))
         
-        else:
-            error = "Please check your information and try again."
-            
+        except Exception as e:
+            db.session.rollback()
+            error = "An unexpected error occurred. Please try again."
+    
     return render_template('signup.html', form=form, error=error)
-
 
 @application.route('/login', methods=["POST", "GET"])
 def login():

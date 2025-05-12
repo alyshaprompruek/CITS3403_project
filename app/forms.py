@@ -1,17 +1,24 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SelectField, SubmitField
-from wtforms.validators import DataRequired, Email, Length
+from wtforms.validators import DataRequired, Email, Length, Regexp
 from datetime import datetime
 
 
 
 class SignUpForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
+    email = StringField(
+        'Email', 
+        validators=[DataRequired(), Email(), Length(max=120)]
+    )
     password = PasswordField(
         'Password', 
         validators=[
             DataRequired(),
-            Length(min=6, message="Password must be at least 6 characters long.")
+            Length(min=8, message="Password must be at least 8 characters long."),
+            Regexp(
+                r"^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
+                message="Password must include at least one uppercase letter, one number, and one special character."
+            )
         ]
     )
     submit = SubmitField('Sign Up')
