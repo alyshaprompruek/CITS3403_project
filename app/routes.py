@@ -10,74 +10,75 @@ def homepage():
     user_id = session.get("user_id", None)
     return render_template('homepage.html', user_id=user_id)
 
-
 @application.route('/signup', methods=["GET", "POST"])
 def signup():
     form = SignUpForm()
 
-    # POST and all fields valid
+    # 1) POST + form valid → try to create user, log in, redirect
     if form.validate_on_submit():
         email    = form.email.data
         password = form.password.data
 
-        # duplicate-email check
+        # already exists?
         if User.query.filter_by(email=email).first():
-            flash("This email is already registered. Please use a different email or log in.", "warning")
+            flash(
+                "This email is already registered. Please use a different email or log in.",
+                "warning"
+            )
             return render_template('signup.html', form=form)
 
-        # create new user
+        # create & hash
         new_user = User(email=email)
         try:
             new_user.set_password(password)
         except ValueError as ve:
-            # your password‐strength errors
             flash(str(ve), "danger")
             return render_template('signup.html', form=form)
 
-        # commit, log in, redirect
         db.session.add(new_user)
         db.session.commit()
+
+        # log them in
         session["user_id"] = new_user.student_id
         return redirect(url_for('dashboard'))
 
-    # If this is a POST *and* form.validate_on_submit() == False,
-    # flash every single field error so the user can see exactly what went wrong.
+    # 2) POST but validation failed → flash each field error
     if request.method == "POST":
-        for field_name, error_list in form.errors.items():
-            for err in error_list:
-                # e.g. "Password: Must include at least one uppercase…"
-                label = getattr(form, field_name).label.text
+        for field_name, err_list in form.errors.items():
+            label = getattr(form, field_name).label.text
+            for err in err_list:
                 flash(f"{label}: {err}", "danger")
 
-    # GET, or after any flashed errors, re-render
+    # 3) GET, or POST+errors → re-render
     return render_template('signup.html', form=form)
+
 
 @application.route('/login', methods=["GET", "POST"])
 def login():
     form = LoginForm()
-    error = None
 
-    if request.method == "POST":
-        if form.validate_on_submit():
-            email = form.email.data
-            password = form.password.data
+    # 1) POST + form valid → check creds, log in, redirect
+    if form.validate_on_submit():
+        email    = form.email.data
+        password = form.password.data
 
-            try:
-                user = User.query.filter_by(email=email).first()
-                if user and user.check_password(password):
-                    session["user_id"] = user.student_id
-                    return redirect(url_for('dashboard'))
-                else:
-                    error = "Invalid email or password."
-            except Exception:
-                error = "Please try again later, an error occurred."
+        user = User.query.filter_by(email=email).first()
+        if user and user.check_password(password):
+            session["user_id"] = user.student_id
+            return redirect(url_for('dashboard'))
         else:
-            error = "Please check your information and try again."
-        
-        return render_template('login.html', form=form, error=error)
+            flash("Invalid email or password.", "danger")
+            return render_template('login.html', form=form)
 
-    # GET
-    return render_template('login.html', form=form, error=error)
+    # 2) POST but validation failed → flash each field error
+    if request.method == "POST":
+        for field_name, err_list in form.errors.items():
+            label = getattr(form, field_name).label.text
+            for err in err_list:
+                flash(f"{label}: {err}", "danger")
+
+    # 3) GET, or POST+errors → render form
+    return render_template('login.html', form=form)
 
 
 @application.route('/dashboard')
