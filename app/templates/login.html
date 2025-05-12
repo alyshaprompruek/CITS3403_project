@@ -10,11 +10,16 @@
         <div class="card p-4 shadow-sm" style="min-width: 280px; max-width: 400px; width: 100%;">
             <h2 class="text-center mb-4">Login</h2>
 
-            {% if error %}
-                <div class="alert alert-danger" role="alert">
-                    {{ error }}
-                </div>
-            {% endif %}
+            {#— global flash messages for CSRF / validation / auth errors —#}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, msg in messages %}
+                  <div class="alert alert-{{ category }} mb-3" role="alert">
+                    {{ msg }}
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
 
             <form method="POST" action="{{ url_for('login') }}">
                 {{ form.hidden_tag() }}
@@ -47,7 +52,7 @@
 
             <div class="text-center mt-3">
                 <span>Don't have an account?</span> 
-                <a href="{{ url_for('signup') }}" class="text-primary fw-bold">Sign up</a>
+                <a href="{{ url_for('signup') }}" class="text-primary fw-bold">Sign Up</a>
             </div>
         </div>
     </div>

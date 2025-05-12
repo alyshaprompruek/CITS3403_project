@@ -14,47 +14,43 @@ def homepage():
 @application.route('/signup', methods=["GET", "POST"])
 def signup():
     form = SignUpForm()
-    error = None
 
-    # Only try to register on POST
+    # POST and all fields valid
+    if form.validate_on_submit():
+        email    = form.email.data
+        password = form.password.data
+
+        # duplicate-email check
+        if User.query.filter_by(email=email).first():
+            flash("This email is already registered. Please use a different email or log in.", "warning")
+            return render_template('signup.html', form=form)
+
+        # create new user
+        new_user = User(email=email)
+        try:
+            new_user.set_password(password)
+        except ValueError as ve:
+            # your password‐strength errors
+            flash(str(ve), "danger")
+            return render_template('signup.html', form=form)
+
+        # commit, log in, redirect
+        db.session.add(new_user)
+        db.session.commit()
+        session["user_id"] = new_user.student_id
+        return redirect(url_for('dashboard'))
+
+    # If this is a POST *and* form.validate_on_submit() == False,
+    # flash every single field error so the user can see exactly what went wrong.
     if request.method == "POST":
-        # First validate the form
-        if form.validate_on_submit():
-            try:
-                email = form.email.data
-                password = form.password.data
+        for field_name, error_list in form.errors.items():
+            for err in error_list:
+                # e.g. "Password: Must include at least one uppercase…"
+                label = getattr(form, field_name).label.text
+                flash(f"{label}: {err}", "danger")
 
-                # Check for existing user
-                if User.query.filter_by(email=email).first():
-                    error = "This email is already registered. Please use a different email or log in."
-                    return render_template('signup.html', form=form, error=error)
-
-                # Create & hash
-                new_user = User(email=email)
-                try:
-                    new_user.set_password(password)
-                except ValueError as ve:
-                    error = str(ve)
-                    return render_template('signup.html', form=form, error=error)
-
-                # Commit to DB
-                db.session.add(new_user)
-                db.session.commit()
-
-                # Log them in
-                session["user_id"] = new_user.student_id
-                return redirect(url_for('dashboard'))
-
-            except Exception as e:
-                db.session.rollback()
-                error = "An unexpected error occurred. Please try again."
-        else:
-            # Form failed validation (e.g. password too weak, bad email)
-            error = "Please check your information and try again."
-
-    # On GET, or after any error, re-render signup
-    return render_template('signup.html', form=form, error=error)
-
+    # GET, or after any flashed errors, re-render
+    return render_template('signup.html', form=form)
 
 @application.route('/login', methods=["GET", "POST"])
 def login():

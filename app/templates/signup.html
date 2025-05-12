@@ -9,12 +9,16 @@
         <div class="card p-4 shadow-sm" style="min-width: 300px; max-width: 400px; width: 100%;">
             <h2 class="text-center mb-4">Sign Up</h2>
 
-            <!-- Display overall error message if present -->
-            {% if error %}
-                <div class="alert alert-danger" role="alert">
-                    {{ error }}
-                </div>
-            {% endif %}
+            {#— global flash messages for CSRF / validation / duplicates —#}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, msg in messages %}
+                  <div class="alert alert-{{ category }} mb-3" role="alert">
+                    {{ msg }}
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
 
             <form method="POST" action="{{ url_for('signup') }}">
                 {{ form.hidden_tag() }}
@@ -35,7 +39,9 @@
                     {% for err in form.password.errors %}
                         <div class="text-danger small">{{ err }}</div>
                     {% endfor %}
-                    <small class="text-muted">Password must be at least 8 characters, include an uppercase letter, a number, and a special character.</small>
+                    <small class="text-muted">
+                        Password must be at least 8 characters, include an uppercase letter, a number, and a special character.
+                    </small>
                 </div>
 
                 <!-- Submit Button -->
