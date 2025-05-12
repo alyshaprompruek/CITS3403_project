@@ -15,140 +15,136 @@ def homepage():
 def signup():
     form = SignUpForm()
     error = None
-    
-    if form.validate_on_submit():
-        try:
-            email = form.email.data
-            password = form.password.data
 
-            # Check if the email is already registered
-            if User.query.filter_by(email=email).first():
-                error = "This email is already registered. Please use a different email or log in."
-                return render_template('signup.html', form=form, error=error)
-
-            # Create a new user with a secure password
-            new_user = User(email=email)
+    # Only try to register on POST
+    if request.method == "POST":
+        # First validate the form
+        if form.validate_on_submit():
             try:
-                new_user.set_password(password)
-            except ValueError as e:
-                error = str(e)
-                return render_template('signup.html', form=form, error=error)
+                email = form.email.data
+                password = form.password.data
 
-            # Save the new user to the database
-            db.session.add(new_user)
-            db.session.commit()
+                # Check for existing user
+                if User.query.filter_by(email=email).first():
+                    error = "This email is already registered. Please use a different email or log in."
+                    return render_template('signup.html', form=form, error=error)
 
-            # Log the user in
-            session["user_id"] = new_user.student_id
-            return redirect(url_for('dashboard'))
-        
-        except Exception as e:
-            db.session.rollback()
-            error = "An unexpected error occurred. Please try again."
-    
+                # Create & hash
+                new_user = User(email=email)
+                try:
+                    new_user.set_password(password)
+                except ValueError as ve:
+                    error = str(ve)
+                    return render_template('signup.html', form=form, error=error)
+
+                # Commit to DB
+                db.session.add(new_user)
+                db.session.commit()
+
+                # Log them in
+                session["user_id"] = new_user.student_id
+                return redirect(url_for('dashboard'))
+
+            except Exception as e:
+                db.session.rollback()
+                error = "An unexpected error occurred. Please try again."
+        else:
+            # Form failed validation (e.g. password too weak, bad email)
+            error = "Please check your information and try again."
+
+    # On GET, or after any error, re-render signup
     return render_template('signup.html', form=form, error=error)
 
 
-@application.route('/login', methods=["POST", "GET"])
+@application.route('/login', methods=["GET", "POST"])
 def login():
     form = LoginForm()
     error = None
-    
-    if request.method == "GET":
-        return render_template('login.html', form=form, error=error)
-    elif request.method == "POST":
+
+    if request.method == "POST":
         if form.validate_on_submit():
             email = form.email.data
             password = form.password.data
 
             try:
-                # Query the database for the user with the given email
                 user = User.query.filter_by(email=email).first()
-              
-                # Check if user exists and password matches
-                if user and user.check_password(password): 
-                    session["user_id"] = user.student_id  # Use student_id for session
+                if user and user.check_password(password):
+                    session["user_id"] = user.student_id
                     return redirect(url_for('dashboard'))
                 else:
                     error = "Invalid email or password."
-            
-            except Exception as e:
-                error = "Please try again later, an error occurred"
+            except Exception:
+                error = "Please try again later, an error occurred."
         else:
             error = "Please check your information and try again."
-            
+        
         return render_template('login.html', form=form, error=error)
+
+    # GET
+    return render_template('login.html', form=form, error=error)
 
 
 @application.route('/dashboard')
 def dashboard():
-    if "user_id" in session: 
+    if "user_id" in session:
         user_id = session["user_id"]
-        
-        # Query the database to get the complete user object
         user = User.query.get(user_id)
-        
-        # Check if user exists in database
+
         if user:
             stats = calculate_user_statistics(user_id)
             user.wam = stats["wam"]
             user.gpa = stats["gpa"]
             user.top_unit = stats["top_unit"]
 
-            return render_template("dashboard.html", user=user, unit_scores=stats["unit_scores"],
-                                   recommendations=stats["recommendations"],
-                                   ranked_units=stats["ranked_units"])
+            return render_template(
+                "dashboard.html",
+                user=user,
+                unit_scores=stats["unit_scores"],
+                recommendations=stats["recommendations"],
+                ranked_units=stats["ranked_units"]
+            )
         else:
-            # User ID in session but not found in database - clear session and redirect
             session.pop("user_id", None)
+
     return redirect(url_for('homepage'))
 
 
 @application.route('/track_grades')
 def track_grades():
-    if "user_id" in session: 
+    if "user_id" in session:
         form = AddUnitForm()
         user_id = session["user_id"]
-        
-        # Query the database to get the complete user object
         user = User.query.get(user_id)
-        
-        # Check if user exists in database
+
         if user:
             return render_template('track_grades.html', user=user, form=form)
         else:
-            # User ID in session but not found in database - clear session and redirect
             session.pop("user_id", None)
+
     return redirect(url_for('homepage'))
 
 
 @application.route('/settings')
 def settings():
-    if "user_id" in session: 
+    if "user_id" in session:
         user_id = session["user_id"]
-        
-        # Query the database to get the complete user object
         user = User.query.get(user_id)
-        
-        # Check if user exists in database
+
         if user:
             return render_template('settings.html', user=user)
         else:
-            # User ID in session but not found in database - clear session and redirect
             session.pop("user_id", None)
+
     return redirect(url_for('homepage'))
 
 
 @application.route('/api/add_unit', methods=["POST"])
 def add_unit():
-    if "user_id" in session: 
+    if "user_id" in session:
         form = AddUnitForm()
         user_id = session["user_id"]
-        
-        # Query the database to get the complete user object
         user = User.query.get(user_id)
-        
-        # Check if user exists in database
+
         if user and form.validate_on_submit():
             try:
                 name = form.name.data
@@ -159,7 +155,6 @@ def add_unit():
                 target_score = request.form.get("target_score", None)
                 outline_url = request.form.get("outline_url", None)
 
-                # Check if the unit already exists for the user
                 existing_unit = Unit.query.filter_by(
                     name=name,
                     unit_code=unit_code,
@@ -183,23 +178,23 @@ def add_unit():
                 )
 
                 db.session.add(new_unit)
-                db.session.commit()  # Commit to save the new unit
-
+                db.session.commit()
                 return render_template('track_grades.html', user=user, form=form, success="Unit added successfully")
-            except Exception as e:
+            except Exception:
                 db.session.rollback()
                 error = "Please try again later, an error occurred"
-                return render_template('settings.html', user=user, form=form, error=error)
+                return render_template('track_grades.html', user=user, form=form, error=error)
+
+    return redirect(url_for('homepage'))
 
 
 @application.route("/api/update_unit", methods=["POST"])
 def update_unit():
-    if "user_id" in session: 
+    if "user_id" in session:
         form = AddUnitForm()
         user_id = session["user_id"]
-        
-        # Query the database to get the complete user object
         user = User.query.get(user_id)
+
         unit_id = request.form.get("unit_id")
         unit = Unit.query.get(unit_id)
 
@@ -207,7 +202,6 @@ def update_unit():
             flash("Unauthorized or invalid unit.", "danger")
             return redirect(url_for("dashboard"))
 
-        # Update fields
         unit.name = request.form["name"]
         unit.unit_code = request.form["unit_code"]
         unit.year = request.form["year"]
@@ -218,6 +212,7 @@ def update_unit():
         db.session.commit()
         flash("Unit updated successfully!", "success")
         return redirect(url_for("dashboard"))
+
     return redirect(url_for('homepage'))
 
 
