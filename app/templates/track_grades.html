@@ -11,67 +11,18 @@
 <div class="container py-5">
     <h2 class="text-center mb-4">Track Your Grades</h2>
 
+    <!-- Left Panel -->
     <div class="row">
-        <!-- Left Panel -->
         <div class="col-md-4">
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">Units</h5>
                 </div>
-                <div class="card-body p-0">
-                    <!-- Unit list with proper spacing -->
-                    <div id="unitList" class="list-group list-group-flush">
-                        <!-- Units will be dynamically populated by JavaScript -->
+                <div class="card-body">
+                    <div id="unitList" class="list-group">
+                        <!-- Units will be dynamically populated here -->
                     </div>
-                    
-                    <!-- Success message with proper spacing -->
-                    {% if success %}
-                        <div class="alert alert-success m-3 mb-0" role="alert">
-                            {{ success }}
-                        </div>
-                    {% endif %}
-                    
-                    <!-- Error message if present -->
-                    {% if error %}
-                        <div class="alert alert-danger m-3 mb-0" role="alert">
-                            {{ error }}
-                        </div>
-                    {% endif %}
-    
-                    <!-- Add Unit Form with better spacing -->
-                    <div class="p-3 mt-3 border-top">
-                        <h4 class="mb-2">Add a New Unit:</h4>
-                        <p class="text-muted mb-3" style="font-size: 0.9rem;">
-                            You can update unit details later from the <a href="{{ url_for('dashboard') }}">dashboard</a>.
-                        </p>
-                        <form action="{{ url_for('add_unit') }}" method="post">
-                            {{ form.csrf_token }}
-                            
-                            <div class="mb-3">
-                                {{ form.name.label(class="form-label fw-medium") }}
-                                {{ form.name(class="form-control") }}
-                            </div>
-                            
-                            <div class="mb-3">
-                                {{ form.unit_code.label(class="form-label fw-medium") }}
-                                {{ form.unit_code(class="form-control") }}
-                            </div>
-                            
-                            <div class="mb-3">
-                                {{ form.semester.label(class="form-label fw-medium") }}
-                                {{ form.semester(class="form-select") }}
-                            </div>
-                            
-                            <div class="mb-3">
-                                {{ form.year.label(class="form-label fw-medium") }}
-                                {{ form.year(class="form-control") }}
-                            </div>
-                            
-                            <div class="d-grid">
-                                {{ form.submit(class="btn btn-primary") }}
-                            </div>
-                        </form>
-                    </div>
+                    <button class="btn btn-primary w-100 mt-3" onclick="simulateAddUnit()">Add Unit</button>
                 </div>
             </div>
         </div>
@@ -111,7 +62,7 @@
                         </table>
                         <button class="btn btn-primary mt-3" onclick="openAssessmentModal()">Add Assessment</button>
                     </div>
-                    
+
                     <!-- Charts -->
                     <div id="charts" class="mt-4">
                         <canvas id="lineChart"></canvas>
@@ -121,94 +72,47 @@
         </div>
     </div>
 
-    <!-- Modal for Adding Unit -->
-    <div id="unitModal" class="modal hidden">
-        <div class="modal-content bg-dark text-white">
-            <h3 class="mb-4 text-center">Add New Unit</h3>
-            <div class="form-group mb-4">
-                <input type="text" id="unitNameInput" class="form-control bg-dark text-white border-secondary" placeholder="Enter Unit Name" />
-            </div>
-            <div class="d-flex justify-content-between">
-                <button class="btn btn-primary px-4" onclick="confirmAddUnit()">Confirm</button>
-                <button class="btn btn-secondary px-4" onclick="closeUnitModal()">Cancel</button>
-            </div>
-        </div>
-    </div>
+<!-- Modal for Adding Unit -->
+<div id="unitModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>Add New Unit</h3>
+    <input type="text" id="unitNameInput" placeholder="Enter Unit Name" />
+    <br><br>
+    <button onclick="confirmAddUnit()">Confirm</button>
+    <button onclick="closeUnitModal()">Cancel</button>
+  </div>
+</div>
 
-    <!-- Modal for Adding Assessment -->
-    <div id="assessmentModal" class="modal hidden">
-        <div class="modal-content bg-dark text-white">
-            <h3 class="mb-4 text-center">Add New Assessment</h3>
-            
-            <div class="form-group mb-3">
-                <input type="text" id="taskNameInput" class="form-control bg-dark text-white border-secondary" placeholder="Task Name" />
-            </div>
-            
-            <div class="form-group mb-3">
-                <select id="assessmentTypeDropdown" class="form-select bg-dark text-white border-secondary">
-                    <option value="" disabled selected>Select Assessment Type</option>
-                    <option value="exam">Exam</option>
-                    <option value="assignment">Assignment</option>
-                    <option value="assessment">Assessment</option>
-                    <option value="other">Other</option>
-                </select>
-            </div>
-            
-            <div class="form-group mb-3">
-                <input type="text" id="scoreInput" class="form-control bg-dark text-white border-secondary" placeholder="Score (e.g., 85)" />
-            </div>
-            
-            <div class="form-group mb-3">
-                <input type="text" id="weightInput" class="form-control bg-dark text-white border-secondary" placeholder="Weight (e.g., 20%)" />
-            </div>
-            
-            <div class="form-group mb-3">
-                <input type="date" id="dateInput" class="form-control bg-dark text-white border-secondary" />
-            </div>
-            
-            <div class="form-group mb-4">
-                <input type="text" id="noteInput" class="form-control bg-dark text-white border-secondary" placeholder="Note (optional)" />
-            </div>
-            
-            <div class="d-flex justify-content-between">
-                <button class="btn btn-primary px-4" onclick="confirmAddAssessment()">Confirm</button>
-                <button class="btn btn-secondary px-4" onclick="closeAssessmentModal()">Cancel</button>
-            </div>
-        </div>
-    </div>
+<!-- Modal for Adding Assessment -->
+<div id="assessmentModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>Add New Assessment</h3>
+    <input type="text" id="taskNameInput" placeholder="Task Name" /><br><br>
+    <input type="text" id="scoreInput" placeholder="Score (e.g., 85)" /><br><br>
+    <input type="text" id="weightInput" placeholder="Weight (e.g., 20%)" /><br><br>
+    <input type="date" id="dateInput" /><br><br>
+    <input type="text" id="noteInput" placeholder="Note (optional)" /><br><br>
+    <button onclick="confirmAddAssessment()">Confirm</button>
+    <button onclick="closeAssessmentModal()">Cancel</button>
+  </div>
+</div>
 
-    <style>
-    .modal {
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0,0,0,0.7);
-        display: flex; align-items: center; justify-content: center;
-        z-index: 1050;
-    }
-    .modal.hidden { 
-        display: none; 
-    }
-    .modal-content {
-        background: #212529;
-        padding: 25px;
-        border-radius: 10px;
-        text-align: center;
-        max-width: 500px;
-        width: 90%;
-        box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    }
-    .hidden {
-        display: none;
-    }
-    /* Custom styles for date picker in dark mode */
-    input[type="date"]::-webkit-calendar-picker-indicator {
-        filter: invert(1);
-    }
-    /* Style for select dropdown in dark mode */
-    select.form-select option {
-        background-color: #343a40;
-    }
-    </style>
+<style>
+.modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+}
+.modal.hidden { display: none; }
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+}
+</style>
+
 </div>
 {% endblock %}
