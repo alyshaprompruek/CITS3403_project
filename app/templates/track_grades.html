@@ -64,7 +64,13 @@
                             
                             <div class="mb-3">
                                 {{ form.year.label(class="form-label fw-medium") }}
-                                {{ form.year(class="form-control") }}
+                                {{ form.year(class="form-select") }}
+                            </div>
+
+                            <!-- Add the Target Score field -->
+                            <div class="mb-3">
+                                {{ form.target_score.label(class="form-label fw-medium") }}
+                                {{ form.target_score(class="form-select") }}
                             </div>
                             
                             <div class="d-grid">
