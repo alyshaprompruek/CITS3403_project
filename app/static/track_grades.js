@@ -97,7 +97,17 @@ function updateView() {
 function renderCharts(assessments) {
     const lineCtx = document.getElementById("lineChart").getContext("2d");
 
-    const lineData = assessments.filter(a => a.score !== "/" && !isNaN(Number(a.score)))
+    const sortedAssessments = [...assessments].sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        if (dateA.getTime() !== dateB.getTime()) {
+            return dateA - dateB;
+        }
+        return 0; // Placeholder: add secondary sorting here if needed
+    });
+
+    const lineData = sortedAssessments
+        .filter(a => a.score !== "/" && !isNaN(Number(a.score)))
         .map(a => ({ x: a.date, y: Number(a.score) }));
 
     if (lineChart) lineChart.destroy();
