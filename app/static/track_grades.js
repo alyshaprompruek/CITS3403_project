@@ -266,14 +266,20 @@ function closeAssessmentModal() {
 
 function confirmAddAssessment() {
     const taskName = document.getElementById("taskNameInput").value.trim();
-    const score = document.getElementById("scoreInput").value.trim();
+    const score = parseFloat(document.getElementById("scoreInput").value.trim());
     const weight = document.getElementById("weightInput").value.trim();
     const date = document.getElementById("dateInput").value.trim();
     const note = document.getElementById("noteInput").value.trim();
     const type = document.getElementById("assessmentTypeDropdown").value.trim();
 
-    if (!taskName || !score || !weight || !date) {
+    if (!taskName || isNaN(score) || !weight || !date) {
         alert("All fields except 'Note' are required!");
+        return;
+    }
+
+    // Validate that the score does not exceed 100
+    if (score > 100) {
+        alert("Score cannot exceed 100.");
         return;
     }
 
@@ -288,7 +294,8 @@ function confirmAddAssessment() {
             score: score,
             weight: weight,
             date: date,
-            note: note
+            note: note,
+            type: type
         })
     })
     .then(res => res.json())
@@ -297,7 +304,7 @@ function confirmAddAssessment() {
             const newAssessment = {
                 task_name: taskName,
                 score: score,
-                weight: weight,
+                weight: `${weight}%`,
                 date: date,
                 note: note,
                 type: type
@@ -306,7 +313,7 @@ function confirmAddAssessment() {
             updateView();
             closeAssessmentModal();
         } else {
-            alert("Failed to add assessment.");
+            alert(result.error || "Failed to add assessment.");
         }
     })
     .catch(err => {
@@ -316,11 +323,11 @@ function confirmAddAssessment() {
 
 function openEditAssessmentModal(task) {
     document.getElementById("editTaskNameInput").value = task.task_name;
-    document.getElementById("editAssessmentTypeDropdown").value = task.type;
+    document.getElementById("editAssessmentTypeDropdown").value = task.type || "other"; // Use the type field from the backend
     document.getElementById("editScoreInput").value = task.score;
-    document.getElementById("editWeightInput").value = task.weight;
+    document.getElementById("editWeightInput").value = task.weight.replace('%', ''); // Remove the percentage symbol
     document.getElementById("editDateInput").value = task.date;
-    document.getElementById("editNoteInput").value = task.note;
+    document.getElementById("editNoteInput").value = task.note || ""; // Default to an empty string if note is missing
     document.getElementById("editAssessmentModal").classList.remove("hidden");
 
     // Optional: Store a reference to the task to be updated later
