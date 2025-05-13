@@ -184,6 +184,47 @@
         </div>
     </div>
 
+    <!-- Modal for Editing Assessment -->
+    <div id="editAssessmentModal" class="modal hidden">
+        <div class="modal-content bg-dark text-white">
+            <h3 class="mb-4 text-center">Edit Assessment</h3>
+            
+            <div class="form-group mb-3">
+                <input type="text" id="editTaskNameInput" class="form-control bg-dark text-white border-secondary" placeholder="Task Name" />
+            </div>
+            
+            <div class="form-group mb-3">
+                <select id="editAssessmentTypeDropdown" class="form-select bg-dark text-white border-secondary">
+                    <option value="exam">Exam</option>
+                    <option value="assignment">Assignment</option>
+                    <option value="assessment">Assessment</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            
+            <div class="form-group mb-3">
+                <input type="text" id="editScoreInput" class="form-control bg-dark text-white border-secondary" placeholder="Score (e.g., 85)" />
+            </div>
+            
+            <div class="form-group mb-3">
+                <input type="text" id="editWeightInput" class="form-control bg-dark text-white border-secondary" placeholder="Weight (e.g., 20%)" />
+            </div>
+            
+            <div class="form-group mb-3">
+                <input type="date" id="editDateInput" class="form-control bg-dark text-white border-secondary" />
+            </div>
+            
+            <div class="form-group mb-4">
+                <input type="text" id="editNoteInput" class="form-control bg-dark text-white border-secondary" placeholder="Note (optional)" />
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <button class="btn btn-primary px-4" onclick="confirmEditAssessment()">Confirm</button>
+                <button class="btn btn-secondary px-4" onclick="closeEditAssessmentModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <style>
     .modal {
         position: fixed;

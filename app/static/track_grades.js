@@ -47,6 +47,7 @@ function updateView() {
     const courseContent = document.getElementById("courseContent");
     const currentTitle = document.getElementById("currentUnitTitle");
     const tableBody = document.querySelector("#assessmentTable tbody");
+    const tableHead = document.querySelector("#assessmentTable thead tr");
 
     // Clear the unit list
     unitList.innerHTML = "";
@@ -75,6 +76,14 @@ function updateView() {
         courseContent.classList.remove("hidden");
         currentTitle.textContent = currentUnit.unit_name;
 
+        // Add Actions header if not present
+        if (!tableHead.querySelector("th.actions-header")) {
+            const actionsTh = document.createElement("th");
+            actionsTh.textContent = "Actions";
+            actionsTh.className = "actions-header";
+            tableHead.appendChild(actionsTh);
+        }
+
         // Populate the assessment table
         tableBody.innerHTML = "";
         currentUnit.assessments.forEach(a => {
@@ -85,6 +94,10 @@ function updateView() {
                 <td>${a.weight}</td>
                 <td>${a.date}</td>
                 <td>${a.note}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary me-2" onclick='openEditAssessmentModal(currentUnit.assessments[${currentUnit.assessments.indexOf(a)}])'>Edit</button>
+                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                </td>
             `;
             tableBody.appendChild(row);
         });
@@ -298,5 +311,63 @@ function confirmAddAssessment() {
     })
     .catch(err => {
         console.error("Error adding assessment:", err);
+    });
+}
+
+function openEditAssessmentModal(task) {
+    document.getElementById("editTaskNameInput").value = task.task_name;
+    document.getElementById("editAssessmentTypeDropdown").value = task.type;
+    document.getElementById("editScoreInput").value = task.score;
+    document.getElementById("editWeightInput").value = task.weight;
+    document.getElementById("editDateInput").value = task.date;
+    document.getElementById("editNoteInput").value = task.note;
+    document.getElementById("editAssessmentModal").classList.remove("hidden");
+
+    // Optional: Store a reference to the task to be updated later
+    window.assessmentToEdit = task;
+}
+
+function closeEditAssessmentModal() {
+    document.getElementById("editAssessmentModal").classList.add("hidden");
+}
+
+function confirmEditAssessment() {
+    const updatedTask = {
+        task_name: document.getElementById("editTaskNameInput").value.trim(),
+        type: document.getElementById("editAssessmentTypeDropdown").value.trim(),
+        score: document.getElementById("editScoreInput").value.trim(),
+        weight: document.getElementById("editWeightInput").value.trim(),
+        date: document.getElementById("editDateInput").value.trim(),
+        note: document.getElementById("editNoteInput").value.trim()
+    };
+
+    fetch("/api/edit_assessment", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            unit_id: currentUnit.unit_id,
+            original_task_name: window.assessmentToEdit.task_name,
+            task_name: updatedTask.task_name,
+            type: updatedTask.type,
+            score: updatedTask.score,
+            weight: updatedTask.weight,
+            date: updatedTask.date,
+            note: updatedTask.note
+        })
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            Object.assign(window.assessmentToEdit, updatedTask);
+            updateView();
+            closeEditAssessmentModal();
+        } else {
+            alert("Failed to update assessment.");
+        }
+    })
+    .catch(err => {
+        console.error("Error updating assessment:", err);
     });
 }

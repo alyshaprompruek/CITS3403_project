@@ -347,3 +347,32 @@ def add_assessment():
     except Exception as e:
         db.session.rollback()
         return {"success": False, "error": str(e)}, 500
+
+# API endpoint to edit an assessment/task
+@application.route('/api/edit_assessment', methods=["POST"])
+def edit_assessment():
+    if "user_id" not in session:
+        return {"error": "Unauthorized"}, 401
+
+    user_id = session["user_id"]
+    data = request.json
+    try:
+        unit_id = data["unit_id"]
+        original_task_name = data["original_task_name"]
+
+        task = Task.query.filter_by(user_id=user_id, unit_id=unit_id, task_name=original_task_name).first()
+        if not task:
+            return {"success": False, "error": "Assessment not found."}, 404
+
+        task.task_name = data["task_name"]
+        task.grade = data["score"]
+        task.weighting = float(data["weight"].strip('%'))
+        task.date = data["date"]
+        task.notes = data.get("note", "")
+        task.type = data.get("type", "other")
+
+        db.session.commit()
+        return {"success": True}
+    except Exception as e:
+        db.session.rollback()
+        return {"success": False, "error": str(e)}, 500
