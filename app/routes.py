@@ -291,6 +291,7 @@ def get_units():
         assessments = []
         for task in tasks:
             assessments.append({
+                "id": task.id,
                 "task_name": task.task_name,
                 "score": str(task.grade),
                 "weight": f"{task.weighting}%",
