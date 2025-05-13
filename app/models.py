@@ -13,7 +13,7 @@ class Unit(db.Model):
     unit_code = db.Column(db.String(20), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.student_id'), nullable=False)
     user = db.relationship('User', backref=db.backref('units', lazy=True))
-    target_score = db.Column(db.Float, nullable=True)
+    target_score = db.Column(db.Float, nullable=True)  # Store the numeric target score
     outline_url = db.Column(db.String(255), nullable=True)
 
 class Task(db.Model):

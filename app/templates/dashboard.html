@@ -47,6 +47,7 @@
                             <th scope="col">Year | Sem</th>
                             <th scope="col">Unit Name</th>
                             <th scope="col">Unit Code</th>
+                            <th scope="col">Target Grade</th> <!-- New column for target grade -->
                             <th scope="col">Grade</th>
                             <th scope="col">Actions</th>
                         </tr>
@@ -59,6 +60,19 @@
                             <td>{{ unit.year }} | Sem {{ unit.semester }}</td>
                             <td>{{ unit.name }}</td>
                             <td>{{ unit.unit_code }}</td>
+                            <td>
+                              {% if unit.target_score == 80 %}
+                                High Distinction
+                              {% elif unit.target_score == 70 %}
+                                Distinction
+                              {% elif unit.target_score == 60 %}
+                                Credit
+                              {% elif unit.target_score == 50 %}
+                                Pass
+                              {% else %}
+                                N/A
+                              {% endif %}
+                            </td>
                             <td>{{ item.score | default('N/A', true) }}</td>
                             <td>
                               <button class="btn btn-sm btn-outline-primary"
@@ -69,6 +83,7 @@
                                   data-unit-code="{{ unit.unit_code }}"
                                   data-unit-grade="{{ item.score }}"
                                   data-unit-year="{{ unit.year }}"
+                                  data-unit-target="{% if unit.target_score == 80 %}HD{% elif unit.target_score == 70 %}D{% elif unit.target_score == 60 %}C{% elif unit.target_score == 50 %}P{% else %}N/A{% endif %}"
                                   data-unit-semester="{{ unit.semester }}">
                                   ✏️ Edit
                               </button>
@@ -150,12 +165,23 @@
             <input type="text" class="form-control" id="editUnitCode" name="unit_code" required>
           </div>
           <div class="mb-3">
-            <label for="editUnitYear" class="form-label">Year</label>
+            <label for="editUnitYear" class="form-label">Year of Completion</label>
             <input type="number" class="form-control" id="editUnitYear" name="year" required>
           </div>
           <div class="mb-3">
             <label for="editUnitSemester" class="form-label">Semester</label>
             <input type="text" class="form-control" id="editUnitSemester" name="semester" required>
+          </div>
+          <!-- Add Target Grade Selection -->
+          <div class="mb-3">
+            <label for="editUnitTargetGrade" class="form-label">Target Grade</label>
+              <select class="form-select" id="editUnitTargetGrade" name="target_score" required>
+              <option value="HD">High Distinction (80-100%)</option>
+              <option value="D">Distinction (70-79%)</option>
+              <option value="C">Credit (60-69%)</option>
+              <option value="P">Pass (50-59%)</option>
+            </select>
+
           </div>
         </div>
         <div class="modal-footer">
@@ -175,7 +201,14 @@
     document.getElementById('editUnitName').value = button.getAttribute('data-unit-name');
     document.getElementById('editUnitCode').value = button.getAttribute('data-unit-code');
     document.getElementById('editUnitYear').value = button.getAttribute('data-unit-year');
+    document.getElementById('editUnitTargetGrade').value = button.getAttribute('data-unit-target');
     document.getElementById('editUnitSemester').value = button.getAttribute('data-unit-semester');
+
+     // Populate the target grade dropdown
+    const targetGrade = button.getAttribute('data-unit-target');
+    const targetGradeDropdown = document.getElementById('editUnitTargetGrade');
+    targetGradeDropdown.value = targetGrade;
+    
   });
 </script>
 {% endblock %}

@@ -159,7 +159,18 @@ def add_unit():
                 semester = form.semester.data
                 year = form.year.data
 
-                target_score = request.form.get("target_score", None)
+                # Get the target score from the form
+                target_grade = form.target_score.data
+
+                # Map the grade to a numeric target score
+                grade_map = {
+                    'HD': 80.0,  # HD is between 80 and 100, so we set it to the lower end (80)
+                    'D': 70.0,   # D is between 70 and 80, so we set it to the lower end (70)
+                    'C': 60.0,   # C is between 60 and 70, so we set it to the lower end (60)
+                    'P': 50.0    # P is the lowest passing grade, so we set it to 50
+                }
+                target_score = grade_map.get(target_grade)
+
                 outline_url = request.form.get("outline_url", None)
 
                 # Check if the unit already exists for the user
@@ -175,6 +186,7 @@ def add_unit():
                     error = "This unit has already been added."
                     return render_template('track_grades.html', user=user, form=form, error=error)
 
+                # Create a new unit
                 new_unit = Unit(
                     name=name,
                     unit_code=unit_code,
@@ -188,11 +200,16 @@ def add_unit():
                 db.session.add(new_unit)
                 db.session.commit()  # Commit to save the new unit
 
-                return render_template('track_grades.html', user=user, form=form, success="Unit added successfully")
+                success = "Unit added successfully"
+                return render_template('track_grades.html', user=user, form=form, success=success)
             except Exception as e:
                 db.session.rollback()
-                error = "Please try again later, an error occurred"
-                return render_template('settings.html', user=user, form=form, error=error)
+                error = f"An error occurred: {str(e)}"
+                return render_template('track_grades.html', user=user, form=form, error=error)
+        else:
+            error = "Invalid form submission. Please check your inputs."
+            return render_template('track_grades.html', user=user, form=form, error=error)
+    return redirect(url_for('homepage'))
 
 @application.route("/api/update_unit", methods=["POST"])
 def update_unit():
