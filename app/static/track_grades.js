@@ -128,7 +128,7 @@ function renderCharts(assessments) {
             type: 'box',
             yMin: gradeRange[0],
             yMax: gradeRange[1],
-            backgroundColor: 'rgba(255, 206, 86, 0.2)',
+            backgroundColor: 'rgba(173, 223, 133, 0.34)',
             borderWidth: 0,
         }
     } : {};
@@ -141,11 +141,10 @@ function renderCharts(assessments) {
         datasets: [{
             label: "Score Over Time",
             data: lineData,
-            borderColor: '#4CAF50', // green
-            backgroundColor: '#A5D6A7', // optional, if you want filled points or area under the line
+            borderColor: '#4CAF50',
+            backgroundColor: '#A5D6A7',
         }]
     },
-    plugins: [Chart.registry.getPlugin('annotation')],
     options: {
         responsive: true,
         plugins: {
@@ -166,6 +165,10 @@ function renderCharts(assessments) {
                 time: {
                     unit: 'day'
                 }
+            },
+            y: {
+                beginAtZero: true,
+                max: 100
             }
         },
         layout: {
@@ -176,9 +179,20 @@ function renderCharts(assessments) {
                 bottom: 20
             }
         },
-    
-    }
+    },
+    plugins: [{
+        id: 'custom_canvas_background_color',
+        beforeDraw: (chart) => {
+            const ctx = chart.canvas.getContext('2d');
+            ctx.save();
+            ctx.globalCompositeOperation = 'destination-over';
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, chart.width, chart.height);
+            ctx.restore();
+        }
+    }]
 });
+
 
 }
 

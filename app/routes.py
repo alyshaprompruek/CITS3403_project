@@ -318,22 +318,31 @@ def add_assessment():
     user_id = session["user_id"]
     data = request.json
     try:
-        # Temporary default value for `type` field to avoid database constraint errors.
-        # TODO: Replace with user-selected type from frontend (e.g., exam, assignment, etc.)
+        unit_id = data["unit_id"]
+        new_weight = float(data["weight"].strip('%'))
+
+        # Get all existing tasks for the unit
+        existing_tasks = Task.query.filter_by(unit_id=unit_id).all()
+        total_weight = sum(task.weighting for task in existing_tasks)
+
+        # Check if adding the new task would exceed 100%
+        if total_weight + new_weight > 100:
+            return {"success": False, "error": "Total weighting for the unit cannot exceed 100%."}, 400
+
+        # Add the new task
         new_task = Task(
             user_id=user_id,
-            unit_id=data["unit_id"],
+            unit_id=unit_id,
             task_name=data["task_name"],
             grade=data["score"],
-            weighting=float(data["weight"].strip('%')),
+            weighting=new_weight,
             date=data["date"],
             notes=data.get("note", ""),
-            type=data["type"] if "type" in data else "other"  # Default to 'other' if not provided
+            type=data["type"] if "type" in data else "other"
         )
         db.session.add(new_task)
         db.session.commit()
         return {"success": True}
     except Exception as e:
-        import sys
         db.session.rollback()
         return {"success": False, "error": str(e)}, 500
