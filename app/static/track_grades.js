@@ -110,6 +110,29 @@ function renderCharts(assessments) {
         .filter(a => a.score !== "/" && !isNaN(Number(a.score)))
         .map(a => ({ x: a.date, y: Number(a.score) }));
 
+    const gradeRangeMap = {
+        80: [80, 100],
+        70: [70, 80],
+        60: [60, 70],
+        50: [50, 60]
+    };
+
+    let gradeRange = null;
+    if (currentUnit.target_score in gradeRangeMap) {
+        gradeRange = gradeRangeMap[currentUnit.target_score];
+        console.log("Target grade range:", gradeRange);
+    }
+
+    const annotations = gradeRange ? {
+        targetZone: {
+            type: 'box',
+            yMin: gradeRange[0],
+            yMax: gradeRange[1],
+            backgroundColor: 'rgba(255, 206, 86, 0.2)',
+            borderWidth: 0,
+        }
+    } : {};
+
     if (lineChart) lineChart.destroy();
 
     lineChart = new Chart(lineCtx, {
@@ -122,6 +145,7 @@ function renderCharts(assessments) {
             backgroundColor: '#A5D6A7', // optional, if you want filled points or area under the line
         }]
     },
+    plugins: [Chart.registry.getPlugin('annotation')],
     options: {
         responsive: true,
         plugins: {
@@ -131,6 +155,9 @@ function renderCharts(assessments) {
                     boxWidth: 12,
                     font: { weight: 'bold' }
                 }
+            },
+            annotation: {
+                annotations: annotations
             }
         },
         scales: {
