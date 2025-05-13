@@ -376,3 +376,51 @@ def edit_assessment():
     except Exception as e:
         db.session.rollback()
         return {"success": False, "error": str(e)}, 500
+
+@application.route('/api/delete_assessment', methods=["POST"])
+def delete_assessment():
+    if "user_id" not in session:
+        return {"error": "Unauthorized"}, 401
+
+    user_id = session["user_id"]
+    data = request.json
+    try:
+        unit_id = data["unit_id"]
+        task_name = data["task_name"]
+
+        # Find the assessment to delete
+        task = Task.query.filter_by(user_id=user_id, unit_id=unit_id, task_name=task_name).first()
+        if not task:
+            return {"success": False, "error": "Assessment not found."}, 404
+
+        # Delete the assessment
+        db.session.delete(task)
+        db.session.commit()
+        return {"success": True}
+    except Exception as e:
+        db.session.rollback()
+        return {"success": False, "error": str(e)}, 500
+
+@application.route('/api/delete_unit', methods=["POST"])
+def delete_unit():
+    if "user_id" not in session:
+        return {"error": "Unauthorized"}, 401
+
+    user_id = session["user_id"]
+    data = request.json
+    try:
+        unit_id = data["unit_id"]
+
+        # Find the unit to delete
+        unit = Unit.query.filter_by(user_id=user_id, id=unit_id).first()
+        if not unit:
+            return {"success": False, "error": "Unit not found."}, 404
+
+        # Delete the unit and its associated tasks
+        Task.query.filter_by(unit_id=unit_id).delete()
+        db.session.delete(unit)
+        db.session.commit()
+        return {"success": True}
+    except Exception as e:
+        db.session.rollback()
+        return {"success": False, "error": str(e)}, 500

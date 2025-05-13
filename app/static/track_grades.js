@@ -96,7 +96,7 @@ function updateView() {
                 <td>${a.note}</td>
                 <td>
                     <button class="btn btn-sm btn-outline-primary me-2" onclick='openEditAssessmentModal(currentUnit.assessments[${currentUnit.assessments.indexOf(a)}])'>Edit</button>
-                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick='deleteAssessment("${a.task_name}")'>Delete</button>
                 </td>
             `;
             tableBody.appendChild(row);
@@ -369,5 +369,36 @@ function confirmEditAssessment() {
     })
     .catch(err => {
         console.error("Error updating assessment:", err);
+    });
+}
+
+function deleteAssessment(taskName) {
+    if (!confirm("Are you sure you want to delete this assessment?")) {
+        return;
+    }
+
+    fetch("/api/delete_assessment", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            unit_id: currentUnit.unit_id,
+            task_name: taskName
+        })
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            // Remove the assessment from the frontend
+            currentUnit.assessments = currentUnit.assessments.filter(a => a.task_name !== taskName);
+            updateView();
+        } else {
+            alert(result.error || "Failed to delete assessment.");
+        }
+    })
+    .catch(err => {
+        console.error("Error deleting assessment:", err);
+        alert("An unexpected error occurred. Please try again.");
     });
 }
