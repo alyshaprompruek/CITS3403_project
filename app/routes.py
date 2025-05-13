@@ -214,11 +214,7 @@ def add_unit():
 @application.route("/api/update_unit", methods=["POST"])
 def update_unit():
     if "user_id" in session: 
-        form = AddUnitForm()
         user_id = session["user_id"]
-        
-        # Query the database to get the complete user object
-        user = User.query.get(user_id)
         unit_id = request.form.get("unit_id")
         unit = Unit.query.get(unit_id)
 
@@ -231,11 +227,26 @@ def update_unit():
         unit.unit_code = request.form["unit_code"]
         unit.year = request.form["year"]
         unit.semester = request.form["semester"]
-        unit.target_score = request.form.get("target_score", unit.target_score)
+
+        # Map the grade label to a numeric target score
+        grade_map = {
+            'HD': 80.0,
+            'D': 70.0,
+            'C': 60.0,
+            'P': 50.0
+        }
+        target_grade = request.form.get("target_score", None)
+        unit.target_score = grade_map.get(target_grade, unit.target_score)  # Default to existing value if not found
+
         unit.outline_url = request.form.get("outline_url", unit.outline_url)
 
-        db.session.commit()
-        flash("Unit updated successfully!", "success")
+        try:
+            db.session.commit()
+            flash("Unit updated successfully!", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"An error occurred: {str(e)}", "danger")
+
         return redirect(url_for("dashboard"))
     return redirect(url_for('homepage'))
 
