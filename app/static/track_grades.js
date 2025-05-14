@@ -283,6 +283,12 @@ function confirmAddAssessment() {
         return;
     }
 
+     // Validate that the weight does not exceed 100
+    if (weight > 100) {
+        alert("Weighting cannot exceed 100.");
+        return;
+    }
+
     fetch("/api/add_assessment", {
         method: "POST",
         headers: {
@@ -347,6 +353,18 @@ function confirmEditAssessment() {
         date: document.getElementById("editDateInput").value.trim(),
         note: document.getElementById("editNoteInput").value.trim()
     };
+
+    if (updatedTask.score > 100) {
+        alert("Score cannot exceed 100.");
+        console.error("Score exceeds 100.");
+        return;
+    }
+
+     // Validate that the weight does not exceed 100
+    if (updatedTask.weight > 100) {
+        alert("Weighting cannot exceed 100.");
+        return;
+    }        
 
     fetch("/api/edit_assessment", {
         method: "POST",

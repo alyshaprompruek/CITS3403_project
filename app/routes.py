@@ -321,23 +321,26 @@ def add_assessment():
     data = request.json
     try:
         unit_id = data["unit_id"]
-        task_name = data["task_name"]
-        score = float(data["score"])
-        weight = float(data["weight"].strip('%'))
-        date = data["date"]
-        note = data.get("note", "")
-        type = data.get("type", "other")  # Default to "other" if type is missing
+        new_weight = float(data["weight"].strip('%'))
+
+        # Get all existing tasks for the unit
+        existing_tasks = Task.query.filter_by(unit_id=unit_id).all()
+        total_weight = sum(task.weighting for task in existing_tasks)
+
+        # Check if adding the new task would exceed 100%
+        if total_weight + new_weight > 100:
+            return {"success": False, "error": "Total weighting for the unit cannot exceed 100%."}, 400
 
         # Add the new task
         new_task = Task(
             user_id=user_id,
             unit_id=unit_id,
-            task_name=task_name,
-            grade=score,
-            weighting=weight,
-            date=date,
-            notes=note,
-            type=type  # Save the type field
+            task_name=data["task_name"],
+            grade=data["score"],
+            weighting=new_weight,
+            date=data["date"],
+            notes=data.get("note", ""),
+            type=data["type"] if "type" in data else "other"
         )
         db.session.add(new_task)
         db.session.commit()
@@ -361,9 +364,23 @@ def edit_assessment():
         if not task:
             return {"success": False, "error": "Assessment not found."}, 404
 
+        new_weight = float(data["weight"].strip('%'))
+
+        # Get all other tasks for the unit (excluding the one being edited)
+        other_tasks = Task.query.filter(
+            Task.unit_id == unit_id,
+            Task.user_id == user_id,
+            Task.id != task.id
+        ).all()
+        total_weight = sum(t.weighting for t in other_tasks)
+
+        # Check if editing would exceed 100%
+        if total_weight + new_weight > 100:
+            return {"success": False, "error": "Total weighting for the unit cannot exceed 100%."}, 400
+
         task.task_name = data["task_name"]
         task.grade = float(data["score"])
-        task.weighting = float(data["weight"].strip('%'))
+        task.weighting = new_weight
         task.date = data["date"]
         task.notes = data.get("note", "")
         task.type = data.get("type", "other")  # Update the type field
@@ -398,26 +415,3 @@ def delete_assessment():
         db.session.rollback()
         return {"success": False, "error": str(e)}, 500
 
-@application.route('/api/delete_unit', methods=["POST"])
-def delete_unit():
-    if "user_id" not in session:
-        return {"error": "Unauthorized"}, 401
-
-    user_id = session["user_id"]
-    data = request.json
-    try:
-        unit_id = data["unit_id"]
-
-        # Find the unit to delete
-        unit = Unit.query.filter_by(user_id=user_id, id=unit_id).first()
-        if not unit:
-            return {"success": False, "error": "Unit not found."}, 404
-
-        # Delete the unit and its associated tasks
-        Task.query.filter_by(unit_id=unit_id).delete()
-        db.session.delete(unit)
-        db.session.commit()
-        return {"success": True}
-    except Exception as e:
-        db.session.rollback()
-        return {"success": False, "error": str(e)}, 500

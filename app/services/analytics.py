@@ -8,6 +8,17 @@ def calculate_unit_score(tasks):
         if task.grade is not None and task.weighting is not None:
             score_sum += task.grade * (task.weighting / 100)
             weight_sum += task.weighting
+            
+    # Cap weight_sum at 100% to avoid over-calculation
+    weight_sum = min(weight_sum, 100)
+
+    # Calculate the average grade
+    average_grade = round(score_sum / (weight_sum / 100), 2) if weight_sum > 0 else 0
+
+    # Calculate remaining weight
+    remaining_weight = round(100 - weight_sum, 2)
+
+    return average_grade, remaining_weight
     return round(score_sum, 2), round(100 - weight_sum, 2)
 
 def calculate_recommendation(target_score, current_score, remaining_weight):
