@@ -143,46 +143,112 @@
     </div>
 
     <!-- Modal for Adding Assessment -->
-    <div id="assessmentModal" class="modal hidden">
-        <div class="modal-content bg-dark text-white">
-            <h3 class="mb-4 text-center">Add New Assessment</h3>
-            
-            <div class="form-group mb-3">
-                <input type="text" id="taskNameInput" class="form-control bg-dark text-white border-secondary" placeholder="Task Name" />
-            </div>
-            
-            <div class="form-group mb-3">
-                <select id="assessmentTypeDropdown" class="form-select bg-dark text-white border-secondary">
-                    <option value="" disabled selected>Select Assessment Type</option>
-                    <option value="exam">Exam</option>
-                    <option value="assignment">Assignment</option>
-                    <option value="assessment">Assessment</option>
-                    <option value="other">Other</option>
-                </select>
-            </div>
-            
-            <div class="form-group mb-3">
-                <input type="text" id="scoreInput" class="form-control bg-dark text-white border-secondary" placeholder="Score (e.g., 85)" />
-            </div>
-            
-            <div class="form-group mb-3">
-                <input type="text" id="weightInput" class="form-control bg-dark text-white border-secondary" placeholder="Weight (e.g., 20%)" />
-            </div>
-            
-            <div class="form-group mb-3">
-                <input type="date" id="dateInput" class="form-control bg-dark text-white border-secondary" />
-            </div>
-            
-            <div class="form-group mb-4">
-                <input type="text" id="noteInput" class="form-control bg-dark text-white border-secondary" placeholder="Note (optional)" />
-            </div>
-            
-            <div class="d-flex justify-content-between">
-                <button class="btn btn-primary px-4" onclick="confirmAddAssessment()">Confirm</button>
-                <button class="btn btn-secondary px-4" onclick="closeAssessmentModal()">Cancel</button>
-            </div>
+<div id="assessmentModal" class="modal hidden">
+    <div class="modal-content bg-dark text-white">
+        <h4 class="mb-2 text-start fw-bold">Add a New Assessment:</h4>
+        <p class="text-muted mb-4 text-start" style="font-size: 0.9rem;">
+            You can edit assessment details later by clicking on them in the table.
+        </p>
+
+        <div class="form-group mb-3 text-start">
+            <label for="taskNameInput" class="form-label fw-medium">Task Name</label>
+            <input type="text" id="taskNameInput" class="form-control bg-dark text-white border-secondary" placeholder="Enter Task Name" />
+        </div>
+
+        <div class="form-group mb-3 text-start">
+            <label for="assessmentTypeDropdown" class="form-label fw-medium">Assessment Type</label>
+            <select id="assessmentTypeDropdown" class="form-select bg-dark text-white border-secondary">
+                <option value="" disabled selected>Select Assessment Type</option>
+                <option value="test">Test</option>
+                <option value="quiz">Quiz</option>
+                <option value="lab">Lab</option>
+                <option value="assignment">Assignment</option>
+                <option value="exam">Exam</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+
+
+        <div class="form-group mb-3 text-start">
+            <label for="scoreInput" class="form-label fw-medium">Score</label>
+            <input type="text" id="scoreInput" class="form-control bg-dark text-white border-secondary" placeholder="e.g., 85" />
+        </div>
+
+        <div class="form-group mb-3 text-start">
+            <label for="weightInput" class="form-label fw-medium">Weight</label>
+            <input type="text" id="weightInput" class="form-control bg-dark text-white border-secondary" placeholder="e.g., 20%" />
+        </div>
+
+        <div class="form-group mb-3 text-start">
+            <label for="dateInput" class="form-label fw-medium">Date</label>
+            <input type="date" id="dateInput" class="form-control bg-dark text-white border-secondary" />
+        </div>
+
+        <div class="form-group mb-4 text-start">
+            <label for="noteInput" class="form-label fw-medium">Note (optional)</label>
+            <input type="text" id="noteInput" class="form-control bg-dark text-white border-secondary" placeholder="Any additional note" />
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <button class="btn btn-primary px-4" onclick="confirmAddAssessment()">Confirm</button>
+            <button class="btn btn-secondary px-4" onclick="closeAssessmentModal()">Cancel</button>
         </div>
     </div>
+</div>
+
+<!-- Modal for Editing Assessment -->
+<div id="editAssessmentModal" class="modal hidden">
+    <div class="modal-content bg-dark text-white">
+        <h4 class="mb-2 text-start fw-bold">Edit Assessment:</h4>
+        <p class="text-muted mb-4 text-start" style="font-size: 0.9rem;">
+            Update the fields below to modify your assessment details.
+        </p>
+
+        <div class="form-group mb-3 text-start">
+            <label for="editTaskNameInput" class="form-label fw-medium">Task Name</label>
+            <input type="text" id="editTaskNameInput" class="form-control bg-dark text-white border-secondary" />
+        </div>
+
+        <div class="form-group mb-3 text-start">
+            <label for="editAssessmentTypeDropdown" class="form-label fw-medium">Assessment Type</label>
+            <select id="editAssessmentTypeDropdown" class="form-select bg-dark text-white border-secondary">
+                <option value="test">Test</option>
+                <option value="quiz">Quiz</option>
+                <option value="lab">Lab</option>
+                <option value="assignment">Assignment</option>
+                <option value="exam">Exam</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+
+
+        <div class="form-group mb-3 text-start">
+            <label for="editScoreInput" class="form-label fw-medium">Score</label>
+            <input type="text" id="editScoreInput" class="form-control bg-dark text-white border-secondary" />
+        </div>
+
+        <div class="form-group mb-3 text-start">
+            <label for="editWeightInput" class="form-label fw-medium">Weight</label>
+            <input type="text" id="editWeightInput" class="form-control bg-dark text-white border-secondary" />
+        </div>
+
+        <div class="form-group mb-3 text-start">
+            <label for="editDateInput" class="form-label fw-medium">Date</label>
+            <input type="date" id="editDateInput" class="form-control bg-dark text-white border-secondary" />
+        </div>
+
+        <div class="form-group mb-4 text-start">
+            <label for="editNoteInput" class="form-label fw-medium">Note (optional)</label>
+            <input type="text" id="editNoteInput" class="form-control bg-dark text-white border-secondary" />
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <button class="btn btn-primary px-4" onclick="confirmEditAssessment()">Confirm</button>
+            <button class="btn btn-secondary px-4" onclick="closeEditAssessmentModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
 
     <style>
     .modal {
