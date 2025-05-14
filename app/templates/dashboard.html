@@ -47,6 +47,7 @@
                             <th scope="col">Year | Sem</th>
                             <th scope="col">Unit Name</th>
                             <th scope="col">Unit Code</th>
+                            <th scope="col">Target Grade</th>
                             <th scope="col">Grade</th>
                             <th scope="col">Actions</th>
                         </tr>
@@ -59,6 +60,19 @@
                             <td>{{ unit.year }} | Sem {{ unit.semester }}</td>
                             <td>{{ unit.name }}</td>
                             <td>{{ unit.unit_code }}</td>
+                            <td>
+                              {% if unit.target_score == 80 %}
+                                High Distinction
+                              {% elif unit.target_score == 70 %}
+                                Distinction
+                              {% elif unit.target_score == 60 %}
+                                Credit
+                              {% elif unit.target_score == 50 %}
+                                Pass
+                              {% else %}
+                                N/A
+                              {% endif %}
+                            </td>
                             <td>{{ item.score | default('N/A', true) }}</td>
                             <td>
                               <button class="btn btn-sm btn-outline-primary"
@@ -69,6 +83,7 @@
                                   data-unit-code="{{ unit.unit_code }}"
                                   data-unit-grade="{{ item.score }}"
                                   data-unit-year="{{ unit.year }}"
+                                  data-unit-target="{% if unit.target_score == 80 %}HD{% elif unit.target_score == 70 %}D{% elif unit.target_score == 60 %}C{% elif unit.target_score == 50 %}P{% else %}N/A{% endif %}"
                                   data-unit-semester="{{ unit.semester }}">
                                   ✏️ Edit
                               </button>
@@ -113,27 +128,13 @@
             </div>
         </div>
     </div>
-
-
-    <!-- Progress Analysis Section -->
-    <div class="card">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Progress Analysis</h5>
-        </div>
-        <div class="card-body">
-            <p>AI-powered insights will help you track your academic progress and provide recommendations.</p>
-            <div id="ai-recommendations" class="mb-3">
-                <p class="text-muted">AI Recommendations will appear here...</p>
-            </div>
-            <button id="aiAnalyzeButton" class="btn btn-primary">Analyze Progress</button>
-        </div>
-    </div>
 </div>
 
 <!-- Edit Unit Modal -->
 <div class="modal fade" id="editUnitModal" tabindex="-1" aria-labelledby="editUnitModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <form method="POST" action="{{ url_for('update_unit') }}">
+      {{ editUnitForm.hidden_tag() }}
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="editUnitModalLabel">Edit Unit</h5>
@@ -142,24 +143,52 @@
         <div class="modal-body">
           <input type="hidden" name="unit_id" id="editUnitId">
           <div class="mb-3">
-            <label for="editUnitName" class="form-label">Unit Name</label>
-            <input type="text" class="form-control" id="editUnitName" name="name" required>
+            <label for="editUnitName" class="form-label">{{ editUnitForm.name.label }}</label>
+            {{ editUnitForm.name(class="form-control", id="editUnitName") }}
+            {% if editUnitForm.name.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in editUnitForm.name.errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+            {% endif %}
           </div>
           <div class="mb-3">
-            <label for="editUnitCode" class="form-label">Unit Code</label>
-            <input type="text" class="form-control" id="editUnitCode" name="unit_code" required>
+            <label for="editUnitCode" class="form-label">{{ editUnitForm.unit_code.label }}</label>
+            {{ editUnitForm.unit_code(class="form-control", id="editUnitCode") }}
+            {% if editUnitForm.unit_code.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in editUnitForm.unit_code.errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+            {% endif %}
           </div>
           <div class="mb-3">
-            <label for="editUnitYear" class="form-label">Year</label>
-            <input type="number" class="form-control" id="editUnitYear" name="year" required>
+            <label for="editUnitYear" class="form-label">{{ editUnitForm.year.label }}</label>
+            {{ editUnitForm.year(class="form-select", id="editUnitYear") }}
+            {% if editUnitForm.year.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in editUnitForm.year.errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+            {% endif %}
           </div>
           <div class="mb-3">
-            <label for="editUnitSemester" class="form-label">Semester</label>
-            <input type="text" class="form-control" id="editUnitSemester" name="semester" required>
+            <label for="editUnitSemester" class="form-label">{{ editUnitForm.semester.label }}</label>
+            {{ editUnitForm.semester(class="form-select", id="editUnitSemester") }}
+            {% if editUnitForm.semester.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in editUnitForm.semester.errors %}
+                  {{ error }}
+                {% endfor %}
+              </div>
+            {% endif %}
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Save Changes</button>
+          {{ editUnitForm.submit(class="btn btn-primary") }}
         </div>
       </div>
     </form>

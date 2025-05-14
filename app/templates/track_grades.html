@@ -2,9 +2,248 @@
 
 {% block head %}
     <title>Track Grades</title>
+    <style>
+        .modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1050;
+        }
+        .modal.hidden { 
+            display: none; 
+        }
+        .modal-content {
+            background: #212529;
+            padding: 25px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
+        select.form-select option {
+            background-color: #343a40;
+        }
+        #aiSection {
+            background-color: #2c3034;
+            border-left: 4px solid #4CAF50;
+            color: #e9ecef;
+        }
+        #aiSection ul li {
+            margin-bottom: 0.5rem;
+        }
+        #aiSection p {
+            line-height: 1.6;
+        }
+        .unit-btn {
+            margin-bottom: 0.5rem;
+            width: 100%;
+            text-align: left;
+        }
+        .fade-out {
+            opacity: 0;
+            transition: opacity 0.5s ease-out;
+        }
+        .alert {
+            opacity: 1; /* Ensure initial opacity */
+        }
+        #charts {
+            max-width: 100%;
+            margin-top: 20px;
+            height: 500px; /* Increased height for better visibility */
+            width: 100%; /* Ensure it takes full width */
+        }
+        #lineChart {
+            width: 100% !important; /* Force full width */
+            height: 500px !important; /* Increased height */
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-    <script src="{{ url_for('static', filename='track_grades.js') }}"></script>
+    <script>
+        // Auto-hide specific flash messages (success/error) after 3 seconds
+        window.addEventListener('DOMContentLoaded', () => {
+            const fadeableAlerts = document.querySelectorAll('.alert.fadeable');
+            fadeableAlerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = 'opacity 0.5s ease-out';
+                    alert.style.opacity = '0';
+                    // Remove from DOM after fade
+                    setTimeout(() => alert.remove(), 500);
+                }, 3000); // Show for 3 seconds
+            });
+        });
+        
+        let lineChart;
+        
+        function renderCharts(tasks) {
+            const lineCtx = document.getElementById("lineChart");
+            if (!lineCtx) {
+                return;
+            }
+            const ctx = lineCtx.getContext("2d");
+        
+            // Sort tasks by date
+            const sortedTasks = [...tasks].sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                if (dateA.getTime() !== dateB.getTime()) {
+                    return dateA - dateB;
+                }
+                return 0;
+            });
+        
+            // Prepare data for the chart (filter out invalid scores and dates)
+            const lineData = sortedTasks
+                .filter(task => {
+                    const isValidGrade = task.grade !== null && !isNaN(Number(task.grade));
+                    const isValidDate = task.date && !isNaN(new Date(task.date).getTime());
+                    if (!isValidGrade || !isValidDate) {
+                        console.warn("Skipping task due to invalid grade or date:", task);
+                        return false;
+                    }
+                    return true;
+                })
+                .map(task => {
+                    return { x: task.date, y: Number(task.grade) };
+                });
+        
+            if (lineData.length === 0) {
+                return;
+            }
+        
+            // Define grade range for target zone
+            const gradeRangeMap = {
+                80: [80, 100],
+                70: [70, 80],
+                60: [60, 70],
+                50: [50, 60]
+            };
+        
+            const targetScore = 80; // Adjust if needed
+            const gradeRange = gradeRangeMap[targetScore] || null;
+        
+            const annotations = gradeRange ? {
+                targetZone: {
+                    type: 'box',
+                    yMin: gradeRange[0],
+                    yMax: gradeRange[1],
+                    backgroundColor: 'rgba(173, 223, 133, 0.34)',
+                    borderWidth: 0,
+                }
+            } : {};
+        
+            // Destroy existing chart if it exists
+            if (lineChart) lineChart.destroy();
+        
+            try {
+                // Create new chart
+                lineChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        datasets: [{
+                            label: "Score Over Time",
+                            data: lineData,
+                            borderColor: '#4CAF50',
+                            backgroundColor: '#A5D6A7',
+                            fill: false,
+                            tension: 0.1,
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false, // Allow the chart to fit the container
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#ffffff',
+                                    boxWidth: 12,
+                                    font: { weight: 'bold' }
+                                }
+                            },
+                            annotation: {
+                                annotations: annotations
+                            }
+                        },
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'day',
+                                    tooltipFormat: 'MMM d, yyyy',
+                                    displayFormats: {
+                                        day: 'MMM d'
+                                    }
+                                },
+                                ticks: {
+                                    color: '#ffffff',
+                                    maxTicksLimit: 10
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    color: '#ffffff',
+                                    stepSize: 10
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            }
+                        },
+                        layout: {
+                            padding: {
+                                left: 20,
+                                right: 20,
+                                top: 20,
+                                bottom: 20
+                            }
+                        }
+                    },
+                    plugins: [{
+                        id: 'custom_canvas_background_color',
+                        beforeDraw: (chart) => {
+                            const ctx = chart.canvas.getContext('2d');
+                            ctx.save();
+                            ctx.globalCompositeOperation = 'destination-over';
+                            ctx.fillStyle = '#212529';
+                            ctx.fillRect(0, 0, chart.width, chart.height);
+                            ctx.restore();
+                        }
+                    }]
+                });
+            } catch (error) {
+            }
+        }
+        
+        // Call renderCharts when a unit is selected or tasks are updated
+        window.addEventListener('DOMContentLoaded', () => {
+            const fadeableAlerts = document.querySelectorAll('.alert.fadeable');
+            fadeableAlerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.transition = 'opacity 0.5s ease-out';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 500);
+                }, 3000);
+            });
+        
+            // Render chart if tasks exist
+            const tasks = {{ serialized_tasks | tojson | safe }};
+            if (tasks && tasks.length > 0) {
+                renderCharts(tasks);
+            }
+        });
+    </script>
 {% endblock %}
 
 {% block body %}
@@ -19,56 +258,55 @@
                     <h5 class="mb-0">Units</h5>
                 </div>
                 <div class="card-body p-0">
-                    <!-- Unit list with proper spacing -->
-                    <div id="unitList" class="list-group list-group-flush">
-                        <!-- Units will be dynamically populated by JavaScript -->
+                    <!-- Unit selection buttons -->
+                    <div class="p-3 d-flex flex-column">
+                        {% for unit in sorted_units %}
+                            <form method="POST">
+                                <input type="hidden" name="unit_id" value="{{ unit.id }}">
+                                <button type="submit" class="btn btn-outline-primary unit-btn {% if selected_unit and selected_unit.id == unit.id %}active{% endif %}">
+                                    {{ unit.unit_code }} - {{ unit.year }} | Sem {{ unit.semester }}
+                                </button>
+                            </form>
+                        {% endfor %}
                     </div>
-                    
-                    <!-- Success message with proper spacing -->
-                    {% if success %}
-                        <div class="alert alert-success m-3 mb-0" role="alert">
-                            {{ success }}
+
+                    {% if add_unit_success %}
+                        <div class="alert alert-success m-3 mb-0 fadeable" role="alert">
+                            {{ add_unit_success }}
                         </div>
                     {% endif %}
                     
-                    <!-- Error message if present -->
-                    {% if error %}
-                        <div class="alert alert-danger m-3 mb-0" role="alert">
-                            {{ error }}
+                    {% if add_unit_error %}
+                        <div class="alert alert-danger m-3 mb-0 fadeable" role="alert">
+                            {{ add_unit_error }}
                         </div>
                     {% endif %}
     
-                    <!-- Add Unit Form with better spacing -->
                     <div class="p-3 mt-3 border-top">
                         <h4 class="mb-2">Add a New Unit:</h4>
                         <p class="text-muted mb-3" style="font-size: 0.9rem;">
                             You can update unit details later from the <a href="{{ url_for('dashboard') }}">dashboard</a>.
                         </p>
                         <form action="{{ url_for('add_unit') }}" method="post">
-                            {{ form.csrf_token }}
-                            
+                            {{ addUnitForm.csrf_token }}
                             <div class="mb-3">
-                                {{ form.name.label(class="form-label fw-medium") }}
-                                {{ form.name(class="form-control") }}
+                                {{ addUnitForm.name.label(class="form-label fw-medium") }}
+                                {{ addUnitForm.name(class="form-control") }}
                             </div>
-                            
                             <div class="mb-3">
-                                {{ form.unit_code.label(class="form-label fw-medium") }}
-                                {{ form.unit_code(class="form-control") }}
+                                {{ addUnitForm.unit_code.label(class="form-label fw-medium") }}
+                                {{ addUnitForm.unit_code(class="form-control") }}
                             </div>
-                            
                             <div class="mb-3">
-                                {{ form.semester.label(class="form-label fw-medium") }}
-                                {{ form.semester(class="form-select") }}
+                                {{ addUnitForm.semester.label(class="form-label fw-medium") }}
+                                {{ addUnitForm.semester(class="form-select") }}
                             </div>
-                            
                             <div class="mb-3">
-                                {{ form.year.label(class="form-label fw-medium") }}
-                                {{ form.year(class="form-control") }}
+                                {{ addUnitForm.year.label(class="form-label fw-medium") }}
+                                {{ addUnitForm.year(class="form-select") }}
                             </div>
-                            
                             <div class="d-grid">
-                                {{ form.submit(class="btn btn-primary") }}
+                                {{ addUnitForm.submit(class="btn btn-primary") }}
                             </div>
                         </form>
                     </div>
@@ -78,137 +316,124 @@
 
         <!-- Right Panel -->
         <div class="col-md-8">
-            <div id="courseContent" class="card shadow-sm">
+            <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
-                    <h5 id="currentUnitTitle" class="mb-0">Unit Details</h5>
+                    <h5 class="mb-0">{{ selected_unit.name if selected_unit else 'Task Details' }}</h5>
                 </div>
                 <div class="card-body">
-                    <!-- Message when no units are added -->
-                    <div id="noUnitBox" class="alert alert-info text-center">
-                        <p>No units added. Please add a unit to get started.</p>
-                    </div>
+                    {% if not selected_unit %}
+                        <div class="text-center py-5">
+                            <h4 class="text-muted">No unit selected</h4>
+                            <p>Please add a unit using the form on the left to get started.</p>
+                        </div>
+                    {% else %}
+                        <!-- Task Table -->
+                        {% if selected_unit.tasks %}
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Task Name</th>
+                                        <th>Score</th>
+                                        <th>Weight (%)</th>
+                                        <th>Date</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for task in selected_unit.tasks %}
+                                        <tr>
+                                            <td>{{ task.task_name or 'Unnamed' }}</td>
+                                            <td>{{ task.grade if task.grade is not none else '/' }}</td>
+                                            <td>{{ task.weighting }}</td>
+                                            <td>{{ task.date or '' }}</td>
+                                            <td>{{ task.notes or '' }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <div class="alert alert-info text-center">
+                                <p>No tasks added yet. Add one to get started.</p>
+                            </div>
+                        {% endif %}
+                        <button class="btn btn-primary mt-3" onclick="openTaskModal()">Add Task</button>
 
-                    <!-- Message when units exist but none are selected -->
-                    <div id="selectUnitBox" class="alert alert-warning text-center hidden">
-                        <p>Please select a unit to display its details.</p>
-                    </div>
+                        <!-- Charts (only if data is present) -->
+                        {% if selected_unit and selected_unit.tasks and selected_unit.tasks | length > 0 %}
+                            <div id="charts" class="mt-4">
+                                <canvas id="lineChart"></canvas>
+                            </div>
+                        {% endif %}
 
-                    <!-- Assessment content -->
-                    <div id="assessmentContent">
-                        <table id="assessmentTable" class="table table-bordered table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Task Name</th>
-                                    <th>Score</th>
-                                    <th>Weight</th>
-                                    <th>Date</th>
-                                    <th>Note</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Assessment rows will be dynamically populated here -->
-                            </tbody>
-                        </table>
-                        <button class="btn btn-primary mt-3" onclick="openAssessmentModal()">Add Assessment</button>
-                    </div>
-                    
-                    <!-- Charts -->
-                    <div id="charts" class="mt-4">
-                        <canvas id="lineChart"></canvas>
-                    </div>
+                        <!-- AI Section -->
+                        {% if selected_unit %}
+                            <div id="aiSection" class="mt-4 p-3 border rounded shadow-sm">
+                                <h4 class="border-bottom pb-2 mb-3">AI Summary and Suggestions</h4>
+                                <div class="mb-3">
+                                    <h5 class="mb-2">Unit Overview</h5>
+                                    <p>{{ ai_summary }}</p>
+                                    <div class="mt-3">
+                                        {{ ai_suggestions | safe }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal for Adding Unit -->
-    <div id="unitModal" class="modal hidden">
+    <!-- Task Modal -->
+    <div id="taskModal" class="modal hidden">
         <div class="modal-content bg-dark text-white">
-            <h3 class="mb-4 text-center">Add New Unit</h3>
-            <div class="form-group mb-4">
-                <input type="text" id="unitNameInput" class="form-control bg-dark text-white border-secondary" placeholder="Enter Unit Name" />
-            </div>
-            <div class="d-flex justify-content-between">
-                <button class="btn btn-primary px-4" onclick="confirmAddUnit()">Confirm</button>
-                <button class="btn btn-secondary px-4" onclick="closeUnitModal()">Cancel</button>
-            </div>
+            <h3 class="mb-4 text-center">Add New Task</h3>
+            <!-- Task Error Message -->
+            {% if task_error %}
+                <div class="alert alert-danger mb-3 fadeable">{{ task_error }}</div>
+            {% endif %}
+            <form action="{{ url_for('add_task') }}" method="post">
+                {{ addTaskForm.csrf_token }}
+                <input type="hidden" name="unit_id" value="{{ addTaskForm.unit_id.data }}">
+                <div class="form-group mb-3">
+                    {{ addTaskForm.task_name.label(class="form-label") }}
+                    {{ addTaskForm.task_name(class="form-control bg-dark text-white border-secondary", placeholder="Task Name") }}
+                </div>
+                <div class="form-group mb-3">
+                    {{ addTaskForm.type.label(class="form-label") }}
+                    {{ addTaskForm.type(class="form-select bg-dark text-white border-secondary") }}
+                </div>
+                <div class="form-group mb-3">
+                    {{ addTaskForm.score.label(class="form-label") }}
+                    {{ addTaskForm.score(class="form-control bg-dark text-white border-secondary", placeholder="Score (e.g., 85)") }}
+                </div>
+                <div class="form-group mb-3">
+                    {{ addTaskForm.weight.label(class="form-label") }}
+                    {{ addTaskForm.weight(class="form-control bg-dark text-white border-secondary", placeholder="Weight (e.g., 20)") }}
+                </div>
+                <div class="form-group mb-3">
+                    {{ addTaskForm.date.label(class="form-label") }}
+                    {{ addTaskForm.date(class="form-control bg-dark text-white border-secondary") }}
+                </div>
+                <div class="form-group mb-4">
+                    {{ addTaskForm.note.label(class="form-label") }}
+                    {{ addTaskForm.note(class="form-control bg-dark text-white border-secondary", placeholder="Notes (optional)") }}
+                </div>
+                <div class="d-flex justify-content-between">
+                    {{ addTaskForm.submit(class="btn btn-primary px-4") }}
+                    <button type="button" class="btn btn-secondary px-4" onclick="closeTaskModal()">Cancel</button>
+                </div>
+            </form>
         </div>
     </div>
-
-    <!-- Modal for Adding Assessment -->
-    <div id="assessmentModal" class="modal hidden">
-        <div class="modal-content bg-dark text-white">
-            <h3 class="mb-4 text-center">Add New Assessment</h3>
-            
-            <div class="form-group mb-3">
-                <input type="text" id="taskNameInput" class="form-control bg-dark text-white border-secondary" placeholder="Task Name" />
-            </div>
-            
-            <div class="form-group mb-3">
-                <select id="assessmentTypeDropdown" class="form-select bg-dark text-white border-secondary">
-                    <option value="" disabled selected>Select Assessment Type</option>
-                    <option value="exam">Exam</option>
-                    <option value="assignment">Assignment</option>
-                    <option value="assessment">Assessment</option>
-                    <option value="other">Other</option>
-                </select>
-            </div>
-            
-            <div class="form-group mb-3">
-                <input type="text" id="scoreInput" class="form-control bg-dark text-white border-secondary" placeholder="Score (e.g., 85)" />
-            </div>
-            
-            <div class="form-group mb-3">
-                <input type="text" id="weightInput" class="form-control bg-dark text-white border-secondary" placeholder="Weight (e.g., 20%)" />
-            </div>
-            
-            <div class="form-group mb-3">
-                <input type="date" id="dateInput" class="form-control bg-dark text-white border-secondary" />
-            </div>
-            
-            <div class="form-group mb-4">
-                <input type="text" id="noteInput" class="form-control bg-dark text-white border-secondary" placeholder="Note (optional)" />
-            </div>
-            
-            <div class="d-flex justify-content-between">
-                <button class="btn btn-primary px-4" onclick="confirmAddAssessment()">Confirm</button>
-                <button class="btn btn-secondary px-4" onclick="closeAssessmentModal()">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <style>
-    .modal {
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0,0,0,0.7);
-        display: flex; align-items: center; justify-content: center;
-        z-index: 1050;
-    }
-    .modal.hidden { 
-        display: none; 
-    }
-    .modal-content {
-        background: #212529;
-        padding: 25px;
-        border-radius: 10px;
-        text-align: center;
-        max-width: 500px;
-        width: 90%;
-        box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    }
-    .hidden {
-        display: none;
-    }
-    /* Custom styles for date picker in dark mode */
-    input[type="date"]::-webkit-calendar-picker-indicator {
-        filter: invert(1);
-    }
-    /* Style for select dropdown in dark mode */
-    select.form-select option {
-        background-color: #343a40;
-    }
-    </style>
 </div>
+<script>
+    function openTaskModal() {
+        document.getElementById('taskModal').classList.remove('hidden');
+    }
+
+    function closeTaskModal() {
+        document.getElementById('taskModal').classList.add('hidden');
+    }
+</script>
 {% endblock %}
