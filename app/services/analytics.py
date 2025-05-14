@@ -8,7 +8,17 @@ def calculate_unit_score(tasks):
         if task.grade is not None and task.weighting is not None:
             score_sum += task.grade * (task.weighting / 100)
             weight_sum += task.weighting
-    return round(score_sum, 2), round(100 - weight_sum, 2)
+
+    # Cap weight_sum at 100% to avoid over-calculation
+    weight_sum = min(weight_sum, 100)
+
+    # Calculate the average grade
+    average_grade = round(score_sum / (weight_sum / 100), 2) if weight_sum > 0 else 0
+
+    # Calculate remaining weight
+    remaining_weight = round(100 - weight_sum, 2)
+
+    return average_grade, remaining_weight
 
 def calculate_recommendation(target_score, current_score, remaining_weight):
     if remaining_weight <= 0:
@@ -44,7 +54,6 @@ def calculate_user_statistics(user_id):
         unit.grade = unit_score if unit_score > 0 else None
         ranked_units.append((unit.unit_code, unit_score))
 
-        
         recommendation = None
         if unit.target_score:
             recommendation = calculate_recommendation(unit.target_score, unit_score, remaining_weight)
@@ -56,7 +65,6 @@ def calculate_user_statistics(user_id):
             "required_score": recommendation
         })
 
-        
         today_str = date.today().isoformat()
         for task in tasks:
             if task.date and task.date >= today_str:
