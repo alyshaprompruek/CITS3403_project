@@ -321,7 +321,7 @@ def add_assessment():
     data = request.json
     try:
         unit_id = data["unit_id"]
-        new_weight = float(data["weight"].strip('%'))
+        new_weight = float(data["weight"])
 
         # Get all existing tasks for the unit
         existing_tasks = Task.query.filter_by(unit_id=unit_id).all()
@@ -364,7 +364,7 @@ def edit_assessment():
         if not task:
             return {"success": False, "error": "Assessment not found."}, 404
 
-        new_weight = float(data["weight"].strip('%'))
+        new_weight = float(data["weight"])
 
         # Get all other tasks for the unit (excluding the one being edited)
         other_tasks = Task.query.filter(

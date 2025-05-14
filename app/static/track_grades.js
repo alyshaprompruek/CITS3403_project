@@ -266,8 +266,8 @@ function closeAssessmentModal() {
 
 function confirmAddAssessment() {
     const taskName = document.getElementById("taskNameInput").value.trim();
-    const score = parseFloat(document.getElementById("scoreInput").value.trim());
-    const weight = document.getElementById("weightInput").value.trim();
+    const score = parseFloat(document.getElementById("scoreInput").value);
+    const weight = parseFloat(document.getElementById("weightInput").value);
     const date = document.getElementById("dateInput").value.trim();
     const note = document.getElementById("noteInput").value.trim();
     const type = document.getElementById("assessmentTypeDropdown").value.trim();
@@ -277,15 +277,12 @@ function confirmAddAssessment() {
         return;
     }
 
-    // Validate that the score does not exceed 100
-    if (score > 100) {
-        alert("Score cannot exceed 100.");
+    if (isNaN(score) || score < 0 || score > 100) {
+        alert("Score must be between 0 and 100.");
         return;
     }
-
-     // Validate that the weight does not exceed 100
-    if (weight > 100) {
-        alert("Weighting cannot exceed 100.");
+    if (isNaN(weight) || weight < 0 || weight > 100) {
+        alert("Weight must be between 0 and 100.");
         return;
     }
 
@@ -354,17 +351,16 @@ function confirmEditAssessment() {
         note: document.getElementById("editNoteInput").value.trim()
     };
 
-    if (updatedTask.score > 100) {
-        alert("Score cannot exceed 100.");
-        console.error("Score exceeds 100.");
+    if (isNaN(updatedTask.score) || updatedTask.score < 0 || updatedTask.score > 100) {
+        alert("Score must be between 0 and 100.");
+        console.error("Invalid score:", updatedTask.score);
         return;
     }
-
-     // Validate that the weight does not exceed 100
-    if (updatedTask.weight > 100) {
-        alert("Weighting cannot exceed 100.");
+    if (isNaN(updatedTask.weight) || updatedTask.weight < 0 || updatedTask.weight > 100) {
+        alert("Weight must be between 0 and 100.");
+        console.error("Invalid weight:", updatedTask.weight);
         return;
-    }        
+    }
 
     fetch("/api/edit_assessment", {
         method: "POST",
