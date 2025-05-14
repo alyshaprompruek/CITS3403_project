@@ -126,6 +126,7 @@ def track_grades():
             session.pop("user_id", None)
     return redirect(url_for('homepage'))
 
+
 @application.route('/settings')
 def settings():
     if "user_id" in session: 
@@ -141,6 +142,17 @@ def settings():
             # User ID in session but not found in database - clear session and redirect
             session.pop("user_id", None)
     return redirect(url_for('homepage'))
+
+# Sharing page route
+@application.route('/sharing')
+def sharing_page():
+    if "user_id" not in session:
+        return redirect(url_for('login'))
+
+    user_id = session["user_id"]
+    user = User.query.get(user_id)
+
+    return render_template("sharing.html", user_id=user_id, user=user)
 
 @application.route('/api/add_unit', methods=["POST"])
 def add_unit():
