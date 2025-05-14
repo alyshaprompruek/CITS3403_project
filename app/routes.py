@@ -328,6 +328,11 @@ def add_assessment():
         note = data.get("note", "")
         type = data.get("type", "other")  # Default to "other" if type is missing
 
+        # Check if an assessment with the same name already exists for the unit
+        existing_task = Task.query.filter_by(user_id=user_id, unit_id=unit_id, task_name=task_name).first()
+        if existing_task:
+            return {"success": False, "error": "An assessment with the same name already exists in this unit."}, 400
+
         # Add the new task
         new_task = Task(
             user_id=user_id,
