@@ -1,3 +1,35 @@
+from app import application
+@application.route("/share/view/<token>")
+def view_shared_dashboard(token):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    current_user = User.query.get(session["user_id"])
+    share = ShareAccess.query.filter_by(share_token=token).first()
+
+    if not share or share.to_user != current_user.email:
+        flash("You do not have permission to view this shared dashboard.", "danger")
+        return redirect(url_for("dashboard"))
+
+    shared_user = User.query.filter_by(email=share.from_user).first()
+    if not shared_user:
+        flash("The original shared user no longer exists.", "danger")
+        return redirect(url_for("dashboard"))
+
+    stats = calculate_user_statistics(shared_user.student_id)
+    editUnitForm = AddUnitForm()
+
+    return render_template(
+        "dashboard.html",
+        user=shared_user,
+        unit_scores=stats["unit_scores"],
+        recommendations=stats["recommendations"],
+        ranked_units=stats["ranked_units"],
+        editUnitForm=editUnitForm,
+        readonly_view=True,
+        shared_from=share.from_user
+    )
+
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file, flash
 from app.models import User, Unit, Task, ShareAccess
 from app.forms import SignUpForm, LoginForm, AddUnitForm, AddTaskForm, ShareForm
