@@ -161,6 +161,7 @@ def track_grades():
 
     add_unit_form = AddUnitForm()
     add_task_form = AddTaskForm()
+    edit_unit_form = EditUnitForm()
 
     # Sort units by year (descending), then semester (descending)
     sorted_units = sorted(user.units, key=lambda u: (-u.year, -int(u.semester)))
@@ -258,6 +259,7 @@ def track_grades():
         sorted_units=sorted_units,
         addUnitForm=add_unit_form,
         addTaskForm=add_task_form,
+        editUnitForm=edit_unit_form,
         selected_unit=selected_unit,
         ai_summary=ai_summary,
         ai_suggestions=ai_suggestions,

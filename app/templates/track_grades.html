@@ -3,17 +3,6 @@
 {% block head %}
     <title>Track Grades</title>
     <style>
-        .modal {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 1050;
-        }
-        .modal.hidden { 
-            display: none; 
-        }
         .modal-content {
             background: #212529;
             padding: 25px;
@@ -294,6 +283,47 @@
                             <p>Please add a unit using the form on the left to get started.</p>
                         </div>
                     {% else %}
+                        <!-- Unit Details Panel -->
+                        <div class="card mb-3">
+                          <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                            <h5 class="mb-0">Unit Details</h5>
+                            <button class="btn btn-sm btn-outline-secondary"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editUnitModal"
+                                    data-unit-id="{{ selected_unit.id }}"
+                                    data-unit-name="{{ selected_unit.name }}"
+                                    data-unit-code="{{ selected_unit.unit_code }}"
+                                    data-unit-year="{{ selected_unit.year }}"
+                                    data-unit-semester="{{ selected_unit.semester }}"
+                                    data-unit-target="{{ selected_unit.target_score }}">
+                              ✏️ Edit
+                            </button>
+                          </div>
+                          <div class="card-body">
+                            <table class="table table-sm table-borderless mb-0">
+                              <tr>
+                                <th>Name:</th>
+                                <td>{{ selected_unit.name }}</td>
+                              </tr>
+                              <tr>
+                                <th>Code:</th>
+                                <td>{{ selected_unit.unit_code }}</td>
+                              </tr>
+                              <tr>
+                                <th>Year:</th>
+                                <td>{{ selected_unit.year }}</td>
+                              </tr>
+                              <tr>
+                                <th>Semester:</th>
+                                <td>{{ selected_unit.semester }}</td>
+                              </tr>
+                              <tr>
+                                <th>Target Score:</th>
+                                <td>{{ selected_unit.target_score if selected_unit.target_score else "Not Set" }}</td>
+                              </tr>
+                            </table>
+                          </div>
+                        </div>
                         <!-- Task Table -->
                         {% if selected_unit.tasks %}
                             <table class="table table-bordered table-hover">
@@ -323,7 +353,7 @@
                                 <p>No tasks added yet. Add one to get started.</p>
                             </div>
                         {% endif %}
-                        <button class="btn btn-primary mt-3" onclick="openTaskModal()">Add Task</button>
+                        <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#taskModal">Add Task</button>
 
                         <!-- Charts (only if data is present) -->
                         {% if selected_unit and selected_unit.tasks and selected_unit.tasks | length > 0 %}
@@ -355,52 +385,115 @@
         </div>
     </div>
 
-    <!-- Task Modal -->
-    <div id="taskModal" class="modal hidden">
-        <div class="modal-content bg-dark text-white">
-            <h3 class="mb-4 text-center">Add New Task</h3>
-            <form action="{{ url_for('add_task') }}" method="post">
-                {{ addTaskForm.csrf_token }}
-                <input type="hidden" name="unit_id" value="{{ addTaskForm.unit_id.data }}">
-                <div class="form-group mb-3">
-                    {{ addTaskForm.task_name.label(class="form-label") }}
-                    {{ addTaskForm.task_name(class="form-control bg-dark text-white border-secondary", placeholder="Task Name") }}
-                </div>
-                <div class="form-group mb-3">
-                    {{ addTaskForm.type.label(class="form-label") }}
-                    {{ addTaskForm.type(class="form-select bg-dark text-white border-secondary") }}
-                </div>
-                <div class="form-group mb-3">
-                    {{ addTaskForm.score.label(class="form-label") }}
-                    {{ addTaskForm.score(class="form-control bg-dark text-white border-secondary", placeholder="Score (e.g., 85)") }}
-                </div>
-                <div class="form-group mb-3">
-                    {{ addTaskForm.weight.label(class="form-label") }}
-                    {{ addTaskForm.weight(class="form-control bg-dark text-white border-secondary", placeholder="Weight (e.g., 20)") }}
-                </div>
-                <div class="form-group mb-3">
-                    {{ addTaskForm.date.label(class="form-label") }}
-                    {{ addTaskForm.date(class="form-control bg-dark text-white border-secondary") }}
-                </div>
-                <div class="form-group mb-4">
-                    {{ addTaskForm.note.label(class="form-label") }}
-                    {{ addTaskForm.note(class="form-control bg-dark text-white border-secondary", placeholder="Notes (optional)") }}
-                </div>
-                <div class="d-flex justify-content-between">
-                    {{ addTaskForm.submit(class="btn btn-primary px-4") }}
-                    <button type="button" class="btn btn-secondary px-4" onclick="closeTaskModal()">Cancel</button>
-                </div>
-            </form>
-        </div>
+    <!-- Add Task Modal -->
+    <div class="modal fade" id="taskModal" tabindex="-1" aria-labelledby="taskModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <form action="{{ url_for('add_task') }}" method="post">
+          {{ addTaskForm.csrf_token }}
+          <div class="modal-content bg-dark text-white">
+            <div class="modal-header">
+              <h5 class="modal-title" id="taskModalLabel">Add New Task</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <input type="hidden" name="unit_id" value="{{ addTaskForm.unit_id.data }}">
+              <div class="form-group mb-3">
+                {{ addTaskForm.task_name.label(class="form-label") }}
+                {{ addTaskForm.task_name(class="form-control bg-dark text-white border-secondary", placeholder="Task Name") }}
+              </div>
+              <div class="form-group mb-3">
+                {{ addTaskForm.type.label(class="form-label") }}
+                {{ addTaskForm.type(class="form-select bg-dark text-white border-secondary") }}
+              </div>
+              <div class="form-group mb-3">
+                {{ addTaskForm.score.label(class="form-label") }}
+                {{ addTaskForm.score(class="form-control bg-dark text-white border-secondary", placeholder="Score (e.g., 85)") }}
+              </div>
+              <div class="form-group mb-3">
+                {{ addTaskForm.weight.label(class="form-label") }}
+                {{ addTaskForm.weight(class="form-control bg-dark text-white border-secondary", placeholder="Weight (e.g., 20)") }}
+              </div>
+              <div class="form-group mb-3">
+                {{ addTaskForm.date.label(class="form-label") }}
+                {{ addTaskForm.date(class="form-control bg-dark text-white border-secondary") }}
+              </div>
+              <div class="form-group mb-4">
+                {{ addTaskForm.note.label(class="form-label") }}
+                {{ addTaskForm.note(class="form-control bg-dark text-white border-secondary", placeholder="Notes (optional)") }}
+              </div>
+            </div>
+            <div class="modal-footer">
+              {{ addTaskForm.submit(class="btn btn-primary") }}
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Unit Modal -->
+    <div class="modal fade" id="editUnitModal" tabindex="-1" aria-labelledby="editUnitModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <form method="POST" action="{{ url_for('update_unit') }}">
+          {{ editUnitForm.hidden_tag() }}
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="editUnitModalLabel">Edit Unit</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              {{ editUnitForm.unit_id(id="editUnitId") }}
+              <div class="mb-3">
+                <label for="editUnitName" class="form-label">{{ editUnitForm.name.label }}</label>
+                {{ editUnitForm.name(class="form-control", id="editUnitName") }}
+              </div>
+              <div class="mb-3">
+                <label for="editUnitCode" class="form-label">{{ editUnitForm.unit_code.label }}</label>
+                {{ editUnitForm.unit_code(class="form-control", id="editUnitCode") }}
+              </div>
+              <div class="mb-3">
+                <label for="editUnitYear" class="form-label">{{ editUnitForm.year.label }}</label>
+                {{ editUnitForm.year(class="form-select", id="editUnitYear") }}
+              </div>
+              <div class="mb-3">
+                <label for="editUnitSemester" class="form-label">{{ editUnitForm.semester.label }}</label>
+                {{ editUnitForm.semester(class="form-select", id="editUnitSemester") }}
+              </div>
+              <div class="mb-3">
+                <label for="editUnitTargetScore" class="form-label">{{ editUnitForm.target_score.label }}</label>
+                {{ editUnitForm.target_score(class="form-control", id="editUnitTargetScore") }}
+              </div>
+            </div>
+            <div class="modal-footer">
+              {{ editUnitForm.submit(class="btn btn-primary") }}
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
 </div>
 <script>
-    function openTaskModal() {
-        document.getElementById('taskModal').classList.remove('hidden');
-    }
+  document.addEventListener('DOMContentLoaded', function () {
+    const editModal = document.getElementById('editUnitModal');
+    if (editModal) {
+      editModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const unitId = button.getAttribute('data-unit-id');
+        const unitName = button.getAttribute('data-unit-name');
+        const unitCode = button.getAttribute('data-unit-code');
+        const unitYear = button.getAttribute('data-unit-year');
+        const unitSemester = button.getAttribute('data-unit-semester');
+        const unitTarget = button.getAttribute('data-unit-target');
 
-    function closeTaskModal() {
-        document.getElementById('taskModal').classList.add('hidden');
+        document.querySelector('#editUnitModal input[name="unit_id"]').value = unitId;
+        document.getElementById('editUnitName').value = unitName;
+        document.getElementById('editUnitCode').value = unitCode;
+        document.getElementById('editUnitYear').value = unitYear;
+        document.getElementById('editUnitSemester').value = unitSemester;
+        document.getElementById('editUnitTargetScore').value = unitTarget;
+      });
     }
+  });
 </script>
 {% endblock %}
