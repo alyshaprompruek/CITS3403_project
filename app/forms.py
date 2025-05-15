@@ -60,3 +60,10 @@ class AddTaskForm(FlaskForm):
 
 
 
+
+
+# ShareForm for sharing page
+class ShareForm(FlaskForm):
+    email = StringField('Recipient Email', validators=[DataRequired(), Email(), Length(max=120)])
+    expires_at = DateField('Expiry Date', validators=[Optional()])
+    submit = SubmitField('Share')
