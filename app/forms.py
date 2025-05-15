@@ -25,7 +25,23 @@ class AddUnitForm(FlaskForm):
     year_choices = [(str(year), str(year)) for year in range(current_year - 5, current_year + 1)]
 
     year = SelectField('Year of Completion', choices=year_choices, default=str(current_year), validators=[DataRequired()])
+    target_score = FloatField('Target Score (%)', validators=[NumberRange(min=0, max=100)])
     submit = SubmitField('Add Unit')
+
+class EditUnitForm(FlaskForm):
+    unit_id = HiddenField('Unit ID', validators=[DataRequired()])  # Add hidden field for unit_id
+    name = StringField('Unit Name', validators=[DataRequired(), Length(max=120)])
+    unit_code = StringField('Unit Code', validators=[DataRequired(), Length(max=20)])
+    semester = SelectField('Semester', choices=[('1', '1'), ('2', '2')], validators=[DataRequired()])
+   
+    # Define available years (e.g., the current year and previous years)
+    current_year = datetime.now().year
+   # Define the last 5 years as options for the user
+    year_choices = [(str(year), str(year)) for year in range(current_year - 5, current_year + 1)]
+
+    year = SelectField('Year of Completion', choices=year_choices, default=str(current_year), validators=[DataRequired()])
+    target_score = FloatField('Target Score (%)', validators=[NumberRange(min=0, max=100)])
+    submit = SubmitField('Edit Unit')
 
 class AddTaskForm(FlaskForm):
     task_name = StringField('Task Name', validators=[DataRequired(), Length(max=120)])
