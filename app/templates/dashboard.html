@@ -6,128 +6,140 @@
 
 {% block body %}
 <div class="container py-5">
-    <!-- Summary Table -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Summary</h5>
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show m-3" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered table-sm">
-                    <tbody>
-                        <tr>
-                            <th scope="row">WAM</th>
-                            <td>{{ user.wam | default('N/A', true) }}</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">GPA</th>
-                            <td>{{ user.gpa | default('N/A', true) }}</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Top Unit</th>
-                            <td>{{ user.top_unit | default('N/A', true) }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
 
-    <!-- Units Table -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Units</h5>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover">
-                    <thead class="thead-light">
-                        <tr>
-                            <th scope="col">Rank</th>
-                            <th scope="col">Year | Sem</th>
-                            <th scope="col">Unit Name</th>
-                            <th scope="col">Unit Code</th>
-                            <th scope="col">Target Grade</th>
-                            <th scope="col">Grade</th>
-                            <th scope="col">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in unit_scores %}
-                          {% set unit = item.unit %}
-                          <tr>
-                            <td>{{ loop.index }}</td>
-                            <td>{{ unit.year }} | Sem {{ unit.semester }}</td>
-                            <td>{{ unit.name }}</td>
-                            <td>{{ unit.unit_code }}</td>
-                            <td>
-                              {% if unit.target_score == 80 %}
-                                High Distinction
-                              {% elif unit.target_score == 70 %}
-                                Distinction
-                              {% elif unit.target_score == 60 %}
-                                Credit
-                              {% elif unit.target_score == 50 %}
-                                Pass
-                              {% else %}
-                                N/A
-                              {% endif %}
-                            </td>
-                            <td>{{ item.score | default('N/A', true) }}</td>
-                            <td>
-                              <button class="btn btn-sm btn-outline-primary"
-                                  data-bs-toggle="modal"
-                                  data-bs-target="#editUnitModal"
-                                  data-unit-id="{{ unit.id }}"
-                                  data-unit-name="{{ unit.name }}"
-                                  data-unit-code="{{ unit.unit_code }}"
-                                  data-unit-grade="{{ item.score }}"
-                                  data-unit-year="{{ unit.year }}"
-                                  data-unit-target="{% if unit.target_score == 80 %}HD{% elif unit.target_score == 70 %}D{% elif unit.target_score == 60 %}C{% elif unit.target_score == 50 %}P{% else %}N/A{% endif %}"
-                                  data-unit-semester="{{ unit.semester }}">
-                                  ✏️ Edit
-                              </button>
-                            </td>
-                          </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  <!-- Summary Table -->
+  <div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">Summary</h5>
     </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered table-sm">
+          <tbody>
+            <tr>
+              <th scope="row">WAM</th>
+              <td>{{ user.wam | default('N/A', true) }}</td>
+            </tr>
+            <tr>
+              <th scope="row">GPA</th>
+              <td>{{ user.gpa | default('N/A', true) }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Top Unit</th>
+              <td>{{ user.top_unit | default('N/A', true) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-    <!-- Recommendations Section -->
-    <div class="card mb-4">
-        <div class="card-header bg-success text-white">
-            <h5 class="mb-0">Target Recommendations</h5>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered table-sm">
-                    <thead>
-                        <tr>
-                            <th>Unit</th>
-                            <th>Target Score</th>
-                            <th>Current Score</th>
-                            <th>Remaining Weight (%)</th>
-                            <th>Required Avg in Remaining</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for rec in recommendations %}
-                        <tr>
-                            <td>{{ rec.unit_code }}</td>
-                            <td>{{ rec.target }}</td>
-                            <td>{{ rec.current_score }}</td>
-                            <td>{{ rec.remaining_weight }}</td>
-                            <td>{{ rec.required_score | default('N/A', true) }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  <!-- Units Table -->
+  <div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">Units</h5>
     </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+          <thead class="thead-light">
+            <tr>
+              <th scope="col">Rank</th>
+              <th scope="col">Year | Sem</th>
+              <th scope="col">Unit Name</th>
+              <th scope="col">Unit Code</th>
+              <th scope="col">Target Grade</th>
+              <th scope="col">Grade</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in unit_scores %}
+              {% set unit = item.unit %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ unit.year }} | Sem {{ unit.semester }}</td>
+                <td>{{ unit.name }}</td>
+                <td>{{ unit.unit_code }}</td>
+                <td>
+                  {% if unit.target_score %}
+                    {{ unit.target_score }}
+                  {% else %}
+                    Not Set
+                  {% endif %}
+                </td>
+                <td>{{ item.score | default('N/A', true) }}</td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary"
+                      data-bs-toggle="modal"
+                      data-bs-target="#editUnitModal"
+                      data-unit-id="{{ unit.id }}"
+                      data-unit-name="{{ unit.name }}"
+                      data-unit-code="{{ unit.unit_code }}"
+                      data-unit-grade="{{ item.score }}"
+                      data-unit-year="{{ unit.year }}"
+                      data-unit-target="{{ unit.target_score | default('', true) }}"                      
+                      data-unit-semester="{{ unit.semester }}">
+                      ✏️ Edit
+                  </button>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recommendations Section -->
+  <div class="card mb-4">
+    <div class="card-header bg-success text-white">
+      <h5 class="mb-0">Target Recommendations</h5>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered table-sm">
+          <thead>
+            <tr>
+              <th>Unit</th>
+              <th>Target Score</th>
+              <th>Current Score</th>
+              <th>Remaining Weight (%)</th>
+              <th>Required Avg in Remaining</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for rec in recommendations %}
+            <tr>
+              <td>{{ rec.unit_code }}</td>
+              <td>
+                {% if rec.target %}
+                  {{ rec.target}}
+                {% else %}
+                  Not Set
+                {% endif %}
+              </td>
+              <td>{{ rec.current_score }}</td>
+              <td>{{ rec.remaining_weight }}</td>
+              <td>{{ rec.required_score | default('N/A', true) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Edit Unit Modal -->
@@ -141,70 +153,100 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <input type="hidden" name="unit_id" id="editUnitId">
+          {{ editUnitForm.unit_id(id="editUnitId") }}
           <div class="mb-3">
             <label for="editUnitName" class="form-label">{{ editUnitForm.name.label }}</label>
             {{ editUnitForm.name(class="form-control", id="editUnitName") }}
-            {% if editUnitForm.name.errors %}
-              <div class="invalid-feedback d-block">
-                {% for error in editUnitForm.name.errors %}
-                  {{ error }}
-                {% endfor %}
-              </div>
-            {% endif %}
           </div>
           <div class="mb-3">
             <label for="editUnitCode" class="form-label">{{ editUnitForm.unit_code.label }}</label>
             {{ editUnitForm.unit_code(class="form-control", id="editUnitCode") }}
-            {% if editUnitForm.unit_code.errors %}
-              <div class="invalid-feedback d-block">
-                {% for error in editUnitForm.unit_code.errors %}
-                  {{ error }}
-                {% endfor %}
-              </div>
-            {% endif %}
           </div>
           <div class="mb-3">
             <label for="editUnitYear" class="form-label">{{ editUnitForm.year.label }}</label>
             {{ editUnitForm.year(class="form-select", id="editUnitYear") }}
-            {% if editUnitForm.year.errors %}
-              <div class="invalid-feedback d-block">
-                {% for error in editUnitForm.year.errors %}
-                  {{ error }}
-                {% endfor %}
-              </div>
-            {% endif %}
           </div>
           <div class="mb-3">
             <label for="editUnitSemester" class="form-label">{{ editUnitForm.semester.label }}</label>
             {{ editUnitForm.semester(class="form-select", id="editUnitSemester") }}
-            {% if editUnitForm.semester.errors %}
-              <div class="invalid-feedback d-block">
-                {% for error in editUnitForm.semester.errors %}
-                  {{ error }}
-                {% endfor %}
-              </div>
-            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label for="editUnitTargetScore" class="form-label">{{ editUnitForm.target_score.label }}</label>
+            {{ editUnitForm.target_score(class="form-control", id="editUnitTargetScore") }}
           </div>
         </div>
         <div class="modal-footer">
           {{ editUnitForm.submit(class="btn btn-primary") }}
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         </div>
       </div>
     </form>
   </div>
 </div>
-
 <!-- Modal Script -->
 <script>
-  const editModal = document.getElementById('editUnitModal');
-  editModal.addEventListener('show.bs.modal', event => {
-    const button = event.relatedTarget;
-    document.getElementById('editUnitId').value = button.getAttribute('data-unit-id');
-    document.getElementById('editUnitName').value = button.getAttribute('data-unit-name');
-    document.getElementById('editUnitCode').value = button.getAttribute('data-unit-code');
-    document.getElementById('editUnitYear').value = button.getAttribute('data-unit-year');
-    document.getElementById('editUnitSemester').value = button.getAttribute('data-unit-semester');
+  document.addEventListener('DOMContentLoaded', function() {
+    const editModal = document.getElementById('editUnitModal');
+    
+    editModal.addEventListener('show.bs.modal', function(event) {
+      // Get the button that triggered the modal
+      const button = event.relatedTarget;
+      
+      // Extract data attributes from button
+      const unitId = button.getAttribute('data-unit-id');
+      const unitName = button.getAttribute('data-unit-name');
+      const unitCode = button.getAttribute('data-unit-code');
+      const unitYear = button.getAttribute('data-unit-year');
+      const unitSemester = button.getAttribute('data-unit-semester');
+      const unitTargetScore = button.getAttribute('data-unit-target');
+      
+      // Debug log to verify data is being captured
+      console.log('Modal opening with data:', {
+        unitId,
+        unitName,
+        unitCode,
+        unitYear,
+        unitSemester,
+        unitTargetScore
+      });
+      
+      // Get form field elements
+      const idField = document.querySelector('#editUnitModal input[name="unit_id"]');
+      const nameField = document.getElementById('editUnitName');
+      const codeField = document.getElementById('editUnitCode');
+      const yearField = document.getElementById('editUnitYear');
+      const semesterField = document.getElementById('editUnitSemester');
+      const targetScoreField = document.getElementById('editUnitTargetScore');
+      
+      // Set form field values
+      if (idField) {
+        idField.value = unitId || '';
+        console.log('Set unit_id to:', idField.value); // Debug log
+      } else {
+        console.error('unit_id field not found');
+      }
+      
+      if (nameField) nameField.value = unitName || '';
+      if (codeField) codeField.value = unitCode || '';
+      if (yearField) yearField.value = unitYear || '';
+      if (semesterField) semesterField.value = unitSemester || '';
+      if (targetScoreField) {
+        targetScoreField.value = unitTargetScore || '';
+        console.log('Set target_score to:', targetScoreField.value); // Debug log
+      } else {
+        console.error('target_score field not found');
+      }
+      
+      // Verify values were set correctly
+      console.log('Form populated with values:', {
+        id: idField ? idField.value : 'field not found',
+        name: nameField ? nameField.value : 'field not found',
+        code: codeField ? codeField.value : 'field not found',
+        year: yearField ? yearField.value : 'field not found',
+        semester: semesterField ? semesterField.value : 'field not found',
+        target_score: targetScoreField ? targetScoreField.value : 'field not found'
+      });
+    });
   });
 </script>
 {% endblock %}

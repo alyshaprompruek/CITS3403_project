@@ -32,9 +32,9 @@ def view_shared_dashboard(token):
 
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file, flash
 from app.models import User, Unit, Task, ShareAccess
-from app.forms import SignUpForm, LoginForm, AddUnitForm, AddTaskForm, ShareForm
-import secrets
+from app.forms import SignUpForm, LoginForm, AddUnitForm, AddTaskForm, EditUnitForm, ShareForm
 from datetime import datetime, timedelta
+import secret
 from app import application, db
 from app.services.analytics import calculate_user_statistics
 from app.utils import fetch_unit_details_and_summary  # Import the utility function
@@ -130,17 +130,12 @@ def dashboard():
         # Check if user exists in database
         if user:
             stats = calculate_user_statistics(user_id)
-            print(">>> unit_scores:", stats["unit_scores"])
-            print(">>> recommendations:", stats["recommendations"])
-            print(">>> top_unit:", stats["top_unit"])
-            print(">>> wam:", stats["wam"])
-
 
             user.wam = stats["wam"]
             user.gpa = stats["gpa"]
             user.top_unit = stats["top_unit"]
 
-            editUnitForm = AddUnitForm()
+            editUnitForm = EditUnitForm()
 
             return render_template("dashboard.html", user=user, unit_scores=stats["unit_scores"],
                                    recommendations=stats["recommendations"],
@@ -155,11 +150,13 @@ def dashboard():
 @application.route('/track_grades', methods=['GET', 'POST'])
 def track_grades():
     if 'user_id' not in session:
+        flash('Please log in to access this page.', 'danger')
         return redirect(url_for('homepage'))
 
     user = User.query.get(session['user_id'])
     if not user:
         session.pop('user_id', None)
+        flash('User not found. Please log in again.', 'danger')
         return redirect(url_for('homepage'))
 
     add_unit_form = AddUnitForm()
@@ -170,14 +167,19 @@ def track_grades():
 
     # Get selected unit
     selected_unit = None
-    unit_id = request.args.get('unit_id')  # Check for unit_id in query parameters
+    unit_id = None
+
+    # Prioritize form data (from unit selection buttons)
+    if request.method == 'POST' and 'unit_id' in request.form:
+        unit_id = request.form.get('unit_id')
+    elif request.args.get('unit_id'):  # Fallback to query parameters
+        unit_id = request.args.get('unit_id')
+
     if unit_id:
         selected_unit = Unit.query.filter_by(id=unit_id, user_id=user.student_id).first()
-    elif request.method == 'POST' and 'unit_id' in request.form:
-        unit_id = request.form.get('unit_id')
-        selected_unit = Unit.query.filter_by(id=unit_id, user_id=user.student_id).first()
-    elif sorted_units:  # Default to most recent unit if none selected
-        selected_unit = sorted_units[0]
+        if not selected_unit:
+            flash('Invalid unit selected.', 'danger')
+            return redirect(url_for('track_grades'))  # Clear query params
 
     # Prepopulate unit_id in add_task_form if selected_unit exists
     if selected_unit:
@@ -225,7 +227,7 @@ def track_grades():
         # Study tips based on task grades
         valid_tasks = [t for t in selected_unit.tasks if t.grade is not None]
         if valid_tasks:
-            avg_grade = sum(t.grade for t in valid_tasks) / len(valid_tasks)
+            avg_grade = sum(t.grade * t.weighting for t in valid_tasks) / sum(t.weighting for t in valid_tasks)
             if avg_grade < 70:
                 suggestions.append(
                     f'<div class="alert alert-warning mt-3">'
@@ -243,7 +245,6 @@ def track_grades():
             else:
                 suggestions.append(
                     f'<div class="alert alert-info mt-3">'
-                    f'<strong>Study Tip:</ xmaxima:'
                     f'<strong>Study Tip:</strong> Your average grade is {avg_grade:.1f}%. '
                     f'Regular review of course materials can help maintain your performance.'
                     f'</div>'
@@ -260,33 +261,34 @@ def track_grades():
         selected_unit=selected_unit,
         ai_summary=ai_summary,
         ai_suggestions=ai_suggestions,
-        task_error=request.args.get('task_error'),
-        add_unit_success=request.args.get('add_unit_success'),
-        add_unit_error=request.args.get('add_unit_error'),
-        serialized_tasks=serialized_tasks  # Pass serialized tasks
+        serialized_tasks=serialized_tasks
     )
 
 @application.route('/api/add_task', methods=["POST"])
 def add_task():
     if "user_id" not in session:
-        return redirect(url_for('track_grades', task_error='Unauthorized'))
+        flash('Unauthorized. Please log in.', 'danger')
+        return redirect(url_for('track_grades'))
 
     user_id = session["user_id"]
     add_task_form = AddTaskForm()
 
     if not add_task_form.validate_on_submit():
-        return redirect(url_for('track_grades', unit_id=add_task_form.unit_id.data, task_error='Invalid form data'))
+        flash('Invalid form data. Please check your input.', 'danger')
+        return redirect(url_for('track_grades', unit_id=add_task_form.unit_id.data))
 
     unit_id = add_task_form.unit_id.data
     unit = Unit.query.get(unit_id)
     if not unit or unit.user_id != user_id:
-        return redirect(url_for('track_grades', unit_id=unit_id, task_error='Invalid unit'))
+        flash('Invalid unit selected.', 'danger')
+        return redirect(url_for('track_grades', unit_id=unit_id))
 
     # Calculate total weighting of existing tasks
     existing_weight = sum(task.weighting for task in unit.tasks if task.weighting is not None)
     new_weight = add_task_form.weight.data
     if existing_weight + new_weight > 100:
-        return redirect(url_for('track_grades', unit_id=unit_id, task_error='Total weighting cannot exceed 100%'))
+        flash('Total weighting cannot exceed 100%.', 'danger')
+        return redirect(url_for('track_grades', unit_id=unit_id))
 
     try:
         new_task = Task(
@@ -301,17 +303,21 @@ def add_task():
         )
         db.session.add(new_task)
         db.session.commit()
-        return redirect(url_for('track_grades', unit_id=unit_id, success='Task added successfully'))
+        flash('Task added successfully!', 'success')
+        return redirect(url_for('track_grades', unit_id=unit_id))
     except ValueError as e:
         db.session.rollback()
-        return redirect(url_for('track_grades', unit_id=unit_id, task_error=f'Invalid numeric value: {str(e)}'))
+        flash(f'Invalid numeric value: {str(e)}', 'danger')
+        return redirect(url_for('track_grades', unit_id=unit_id))
     except Exception as e:
         db.session.rollback()
-        return redirect(url_for('track_grades', unit_id=unit_id, task_error=str(e)))
+        flash(f'Error adding task: {str(e)}', 'danger')
+        return redirect(url_for('track_grades', unit_id=unit_id))
 
 @application.route('/api/add_unit', methods=["POST"])
 def add_unit():
     if "user_id" not in session:
+        flash('Please log in to access this page.', 'danger')
         return redirect(url_for('homepage'))
 
     user_id = session["user_id"]
@@ -320,16 +326,19 @@ def add_unit():
 
     if not user:
         session.pop('user_id', None)
+        flash('User not found. Please log in again.', 'danger')
         return redirect(url_for('homepage'))
 
     if not add_unit_form.validate_on_submit():
-        return redirect(url_for('track_grades', add_unit_error='Invalid form data'))
+        flash('Invalid form data. Please check your input.', 'danger')
+        return redirect(url_for('track_grades'))
 
     try:
         name = add_unit_form.name.data
         unit_code = add_unit_form.unit_code.data
         semester = add_unit_form.semester.data
         year = add_unit_form.year.data
+        target_score = add_unit_form.target_score.data
 
         # Check if the unit already exists for the user
         existing_unit = Unit.query.filter_by(
@@ -341,7 +350,8 @@ def add_unit():
         ).first()
 
         if existing_unit:
-            return redirect(url_for('track_grades', add_unit_error='This unit has already been added'))
+            flash('This unit has already been added.', 'danger')
+            return redirect(url_for('track_grades'))
 
         # Fetch summary and links using API
         summary, links = fetch_unit_details_and_summary(unit_code, API_KEY)
@@ -353,7 +363,7 @@ def add_unit():
             semester=semester,
             year=year,
             user_id=user_id,
-            target_score=None,
+            target_score=target_score,
             outline_url=None,
             summary=summary,
             links=links
@@ -362,22 +372,24 @@ def add_unit():
         db.session.add(new_unit)
         db.session.commit()
 
-        # Redirect to track_grades with the new unit selected
-        return redirect(url_for('track_grades', unit_id=new_unit.id, add_unit_success='Unit added successfully'))
+        flash('Unit added successfully!', 'success')
+        return redirect(url_for('track_grades', unit_id=new_unit.id))
     except Exception as e:
         db.session.rollback()
-        return redirect(url_for('track_grades', add_unit_error=f'Error adding unit: {str(e)}'))
+        flash(f'Error adding unit: {str(e)}', 'danger')
+        return redirect(url_for('track_grades'))
 
 @application.route("/api/update_unit", methods=["POST"])
 def update_unit():
+
     if "user_id" not in session:
         return redirect(url_for("homepage"))
 
-    addUnitForm = addUnitForm()
-    if addUnitForm.validate_on_submit():
+    editUnitForm = EditUnitForm()
+    if editUnitForm.validate_on_submit():
         user_id = session["user_id"]
-        unit_pk = request.addUnitForm.get("unit_pk")
-        unit = Unit.query.get(unit_pk)
+        unit_id = editUnitForm.unit_id.data  # Use unit_id from the form
+        unit = Unit.query.get(unit_id)
 
         if not unit or unit.user_id != user_id:
             flash("Unauthorized or invalid unit.", "danger")
@@ -387,10 +399,11 @@ def update_unit():
         old_code = unit.unit_code
 
         # Update unit attributes from form data
-        unit.name = addUnitForm.name.data
-        unit.unit_code = addUnitForm.unit_code.data
-        unit.year = addUnitForm.year.data
-        unit.semester = addUnitForm.semester.data
+        unit.name = editUnitForm.name.data
+        unit.target_score = editUnitForm.target_score.data
+        unit.unit_code = editUnitForm.unit_code.data
+        unit.year = editUnitForm.year.data
+        unit.semester = editUnitForm.semester.data
 
         # Check if unit code has changed and update summary/links if needed
         if unit.unit_code != old_code:
@@ -406,7 +419,7 @@ def update_unit():
             flash(f"Error updating unit: {str(e)}", "danger")
     else:
         # Provide specific error messages for form validation failures
-        for field, errors in form.errors.items():
+        for field, errors in editUnitForm.errors.items():
             for error in errors:
                 flash(f"Error in {field}: {error}", "danger")
 
