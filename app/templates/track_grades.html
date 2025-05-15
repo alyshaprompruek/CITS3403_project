@@ -238,7 +238,7 @@
             });
         
             // Render chart if tasks exist
-            const tasks = JSON.parse('{{ serialized_tasks | tojson | safe | escapejs }}');
+            const tasks = {{ serialized_tasks | tojson | safe }};
             if (tasks && tasks.length > 0) {
                 renderCharts(tasks);
             }
@@ -266,6 +266,8 @@
                                 <button type="submit" class="btn btn-outline-primary unit-btn {% if selected_unit and selected_unit.id == unit.id %}active{% endif %}">
                                     {{ unit.unit_code }} - {{ unit.year }} | Sem {{ unit.semester }}
                                 </button>
+                                
+                               
                             </form>
                         {% endfor %}
                     </div>
@@ -337,6 +339,7 @@
                                         <th>Weight (%)</th>
                                         <th>Date</th>
                                         <th>Notes</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -347,6 +350,20 @@
                                             <td>{{ task.weighting }}</td>
                                             <td>{{ task.date or '' }}</td>
                                             <td>{{ task.notes or '' }}</td>
+                                             <td>
+                                            <!-- Add Edit button here -->
+                                            <button class="btn btn-sm btn-outline-primary"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editAssessmentModal"
+                                                data-task-name="{{ task.task_name }}"
+                                                data-task-grade="{{ task.grade }}"
+                                                data-task-weight="{{ task.weighting }}"
+                                                data-task-date="{{ task.date }}"
+                                                data-task-type="{{ task.type }}"
+                                                data-task-notes="{{ task.notes }}">
+                                                ✏️ Edit
+                                            </button>
+                                        </td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
@@ -428,6 +445,7 @@
     </div>
 </div>
 <script>
+    
     function openTaskModal() {
         document.getElementById('taskModal').classList.remove('hidden');
     }
