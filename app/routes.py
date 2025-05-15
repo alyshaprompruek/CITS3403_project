@@ -266,6 +266,28 @@ def track_grades():
         serialized_tasks=serialized_tasks
     )
 
+@application.route('/delete_unit', methods=['POST'])
+def delete_unit():
+    if "user_id" not in session:
+        flash("You must be logged in to delete a unit.", "danger")
+        return redirect(url_for("homepage"))
+
+    unit_id = request.form.get("unit_id")
+    unit = Unit.query.get(unit_id)
+
+    if unit and unit.user_id == session["user_id"]:
+        try:
+            db.session.delete(unit)
+            db.session.commit()
+            flash("Unit deleted successfully.", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Failed to delete unit: {str(e)}", "danger")
+    else:
+        flash("Unauthorized or invalid unit.", "danger")
+
+    return redirect(url_for("track_grades"))
+
 @application.route('/api/add_task', methods=["POST"])
 def add_task():
     if "user_id" not in session:
