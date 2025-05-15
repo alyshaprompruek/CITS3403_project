@@ -34,7 +34,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 from app.models import User, Unit, Task, ShareAccess
 from app.forms import SignUpForm, LoginForm, AddUnitForm, AddTaskForm, EditUnitForm, ShareForm
 from datetime import datetime, timedelta
-import secret
+import secrets
 from app import application, db
 from app.services.analytics import calculate_user_statistics
 from app.utils import fetch_unit_details_and_summary  # Import the utility function
