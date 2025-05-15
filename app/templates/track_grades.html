@@ -244,9 +244,6 @@
 
                     <div class="p-3 mt-3 border-top">
                         <h4 class="mb-2">Add a New Unit:</h4>
-                        <p class="text-muted mb-3" style="font-size: 0.9rem;">
-                            You can update unit details later from the <a href="{{ url_for('dashboard') }}">dashboard</a>.
-                        </p>
                         <form action="{{ url_for('add_unit') }}" method="post">
                             {{ addUnitForm.csrf_token }}
                             <div class="mb-3">
