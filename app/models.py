@@ -30,3 +30,15 @@ class Task(db.Model):
     unit_id = db.Column(db.Integer, db.ForeignKey('unit.id'), nullable=False)
     user = db.relationship('User', backref=db.backref('tasks', lazy=True))
     unit = db.relationship('Unit', backref=db.backref('tasks', lazy=True))
+
+
+# ShareAccess model for sharing records between users
+from datetime import datetime
+
+class ShareAccess(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    share_token = db.Column(db.String(64), unique=True, nullable=False)
+    from_user = db.Column(db.String(120), nullable=False)
+    to_user = db.Column(db.String(120), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime, nullable=True)
