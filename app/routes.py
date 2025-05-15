@@ -390,10 +390,8 @@ def logout():
 def settings():
     if "user_id" in session: 
         user_id = session["user_id"]
-        
         # Query the database to get the complete user object
         user = User.query.get(user_id)
-        
         # Check if user exists in database
         if user:
             return render_template('settings.html', user=user)
@@ -413,11 +411,9 @@ def sharing_page():
     user_id = session["user_id"]
     user = User.query.get(user_id)
     form = ShareForm()
-
     # Fetch share records
     outgoing_shares = ShareAccess.query.filter_by(from_user=user.email).all()
     incoming_shares = ShareAccess.query.filter_by(to_user=user.email).all()
-
     return render_template('sharing.html', user=user, form=form,
                            outgoing_shares=outgoing_shares,
                            incoming_shares=incoming_shares)
