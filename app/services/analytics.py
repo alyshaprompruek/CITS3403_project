@@ -64,8 +64,12 @@ def calculate_required_score(target_score, current_score, remaining_weight):
     """
     if remaining_weight <= 0:
         return None
-    required_score = (target_score - current_score) / (remaining_weight / 100)
-    return round(required_score, 2)
+    current_total = current_score * (1 - remaining_weight / 100)
+    target_total = target_score
+    if target_total - current_total > 0:
+        return round(((target_total - current_total) * 100)/remaining_weight,2)
+    else:
+        return 0
 
 
 def calculate_user_statistics(user_id):
