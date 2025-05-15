@@ -6,9 +6,9 @@
 //           unit_name: "CITS3403",
 //           target_score: 80,
 //           assessments: [
-//             { task_name: "Assignment 1", score: "78", weight: "20%", date: "2025-04-01", note: "Good effort" },
-//             { task_name: "Quiz", score: "85", weight: "10%", date: "2025-04-10", note: "" },
-//             { task_name: "Final Exam", score: "/", weight: "70%", date: "2025-06-01", note: "Yet to complete" }
+//             { id: 1, task_name: "Assignment 1", score: "78", weight: "20%", date: "2025-04-01", note: "Good effort" },
+//             { id: 2, task_name: "Quiz", score: "85", weight: "10%", date: "2025-04-10", note: "" },
+//             { id: 3, task_name: "Final Exam", score: "/", weight: "70%", date: "2025-06-01", note: "Yet to complete" }
 //           ]
 //         }
 //       ]
@@ -96,7 +96,7 @@ function updateView() {
                 <td>${a.note}</td>
                 <td>
                     <button class="btn btn-sm btn-outline-primary me-2" onclick='openEditAssessmentModal(currentUnit.assessments[${currentUnit.assessments.indexOf(a)}])'>Edit</button>
-                    <button class="btn btn-sm btn-outline-danger" onclick='deleteAssessment("${a.task_name}")'>Delete</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick='deleteAssessment(${a.id})'>Delete</button>
                 </td>
             `;
             tableBody.appendChild(row);
@@ -302,6 +302,7 @@ function confirmAddAssessment() {
     .then(result => {
         if (result.success) {
             const newAssessment = {
+                id: result.assessment_id,
                 task_name: taskName,
                 score: score,
                 weight: `${weight}%`,
@@ -379,26 +380,22 @@ function confirmEditAssessment() {
     });
 }
 
-function deleteAssessment(taskName) {
+function deleteAssessment(assessmentId) {
     if (!confirm("Are you sure you want to delete this assessment?")) {
         return;
     }
 
-    fetch("/api/delete_assessment", {
+    fetch(`/api/delete_assessment/${assessmentId}`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            unit_id: currentUnit.unit_id,
-            task_name: taskName
-        })
+        }
     })
     .then(res => res.json())
     .then(result => {
         if (result.success) {
             // Remove the assessment from the frontend
-            currentUnit.assessments = currentUnit.assessments.filter(a => a.task_name !== taskName);
+            currentUnit.assessments = currentUnit.assessments.filter(a => a.id !== assessmentId);
             updateView();
         } else {
             alert(result.error || "Failed to delete assessment.");

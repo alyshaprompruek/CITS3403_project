@@ -379,19 +379,15 @@ def edit_assessment():
         db.session.rollback()
         return {"success": False, "error": str(e)}, 500
 
-@application.route('/api/delete_assessment', methods=["POST"])
-def delete_assessment():
+@application.route('/api/delete_assessment/<int:assessment_id>', methods=["POST"])
+def delete_assessment(assessment_id):
     if "user_id" not in session:
         return {"error": "Unauthorized"}, 401
 
     user_id = session["user_id"]
-    data = request.json
     try:
-        unit_id = data["unit_id"]
-        task_name = data["task_name"]
-
         # Find the assessment to delete
-        task = Task.query.filter_by(user_id=user_id, unit_id=unit_id, task_name=task_name).first()
+        task = Task.query.filter_by(id=assessment_id, user_id=user_id).first()
         if not task:
             return {"success": False, "error": "Assessment not found."}, 404
 
