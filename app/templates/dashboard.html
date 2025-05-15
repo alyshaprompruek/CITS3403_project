@@ -61,7 +61,6 @@
               <th scope="col">Unit Code</th>
               <th scope="col">Target Grade</th>
               <th scope="col">Grade</th>
-              <th scope="col">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -80,20 +79,6 @@
                   {% endif %}
                 </td>
                 <td>{{ item.score | default('N/A', true) }}</td>
-                <td>
-                  <button class="btn btn-sm btn-outline-primary"
-                      data-bs-toggle="modal"
-                      data-bs-target="#editUnitModal"
-                      data-unit-id="{{ unit.id }}"
-                      data-unit-name="{{ unit.name }}"
-                      data-unit-code="{{ unit.unit_code }}"
-                      data-unit-grade="{{ item.score }}"
-                      data-unit-year="{{ unit.year }}"
-                      data-unit-target="{{ unit.target_score | default('', true) }}"                      
-                      data-unit-semester="{{ unit.semester }}">
-                      ✏️ Edit
-                  </button>
-                </td>
               </tr>
             {% endfor %}
           </tbody>

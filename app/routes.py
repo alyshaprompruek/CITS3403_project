@@ -161,6 +161,7 @@ def track_grades():
 
     add_unit_form = AddUnitForm()
     add_task_form = AddTaskForm()
+    edit_unit_form = EditUnitForm()
 
     # Sort units by year (descending), then semester (descending)
     sorted_units = sorted(user.units, key=lambda u: (-u.year, -int(u.semester)))
@@ -258,11 +259,34 @@ def track_grades():
         sorted_units=sorted_units,
         addUnitForm=add_unit_form,
         addTaskForm=add_task_form,
+        editUnitForm=edit_unit_form,
         selected_unit=selected_unit,
         ai_summary=ai_summary,
         ai_suggestions=ai_suggestions,
         serialized_tasks=serialized_tasks
     )
+
+@application.route('/delete_unit', methods=['POST'])
+def delete_unit():
+    if "user_id" not in session:
+        flash("You must be logged in to delete a unit.", "danger")
+        return redirect(url_for("homepage"))
+
+    unit_id = request.form.get("unit_id")
+    unit = Unit.query.get(unit_id)
+
+    if unit and unit.user_id == session["user_id"]:
+        try:
+            db.session.delete(unit)
+            db.session.commit()
+            flash("Unit deleted successfully.", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Failed to delete unit: {str(e)}", "danger")
+    else:
+        flash("Unauthorized or invalid unit.", "danger")
+
+    return redirect(url_for("track_grades"))
 
 @application.route('/api/add_task', methods=["POST"])
 def add_task():
