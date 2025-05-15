@@ -1,6 +1,40 @@
+from app import application
+@application.route("/share/view/<token>")
+def view_shared_dashboard(token):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    current_user = User.query.get(session["user_id"])
+    share = ShareAccess.query.filter_by(share_token=token).first()
+
+    if not share or share.to_user != current_user.email:
+        flash("You do not have permission to view this shared dashboard.", "danger")
+        return redirect(url_for("dashboard"))
+
+    shared_user = User.query.filter_by(email=share.from_user).first()
+    if not shared_user:
+        flash("The original shared user no longer exists.", "danger")
+        return redirect(url_for("dashboard"))
+
+    stats = calculate_user_statistics(shared_user.student_id)
+    editUnitForm = AddUnitForm()
+
+    return render_template(
+        "dashboard.html",
+        user=shared_user,
+        unit_scores=stats["unit_scores"],
+        recommendations=stats["recommendations"],
+        ranked_units=stats["ranked_units"],
+        editUnitForm=editUnitForm,
+        readonly_view=True,
+        shared_from=share.from_user
+    )
+
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file, flash
-from app.models import User, Unit, Task
-from app.forms import SignUpForm, LoginForm, AddUnitForm, AddTaskForm
+from app.models import User, Unit, Task, ShareAccess
+from app.forms import SignUpForm, LoginForm, AddUnitForm, AddTaskForm, ShareForm
+import secrets
+from datetime import datetime, timedelta
 from app import application, db
 from app.services.analytics import calculate_user_statistics
 from app.utils import fetch_unit_details_and_summary  # Import the utility function
@@ -388,10 +422,8 @@ def logout():
 def settings():
     if "user_id" in session: 
         user_id = session["user_id"]
-        
         # Query the database to get the complete user object
         user = User.query.get(user_id)
-        
         # Check if user exists in database
         if user:
             return render_template('settings.html', user=user)
@@ -401,3 +433,46 @@ def settings():
     return redirect(url_for('homepage'))
 
 
+
+
+# --- Sharing page and create_share logic ---
+@application.route('/sharing', methods=['GET'])
+def sharing_page():
+    if "user_id" not in session:
+        return redirect(url_for('login'))
+    user_id = session["user_id"]
+    user = User.query.get(user_id)
+    form = ShareForm()
+    # Fetch share records
+    outgoing_shares = ShareAccess.query.filter_by(from_user=user.email).all()
+    incoming_shares = ShareAccess.query.filter_by(to_user=user.email).all()
+    return render_template('sharing.html', user=user, form=form,
+                           outgoing_shares=outgoing_shares,
+                           incoming_shares=incoming_shares)
+
+@application.route('/create_share', methods=['POST'])
+def create_share():
+    if "user_id" not in session:
+        return redirect(url_for('login'))
+    form = ShareForm()
+    if form.validate_on_submit():
+        email = form.email.data.strip().lower()
+        expires_at = form.expires_at.data or (datetime.utcnow() + timedelta(days=180))
+        token = secrets.token_urlsafe(16)
+
+        user = User.query.get(session["user_id"])
+        new_share = ShareAccess(
+            share_token=token,
+            from_user=user.email,
+            to_user=email,
+            expires_at=expires_at
+        )
+
+        db.session.add(new_share)
+        db.session.commit()
+
+        flash(f"Shared with {email} (expires: {expires_at})", "success")
+        return redirect(url_for('sharing_page'))
+
+    flash("Failed to share. Please check the input.", "danger")
+    return redirect(url_for('sharing_page'))
