@@ -513,3 +513,18 @@ def create_share():
 
     flash("Failed to share. Please check the input.", "danger")
     return redirect(url_for('sharing_page'))
+
+@application.route('/remove_share', methods=['POST'])
+def remove_share():
+    if "user_id" not in session:
+        return redirect(url_for('login'))
+    share_id = request.form.get('share_id')
+    share = ShareAccess.query.get(share_id)
+    user = User.query.get(session["user_id"])
+    if share and share.from_user == user.email:
+        db.session.delete(share)
+        db.session.commit()
+        flash("Share access removed.", "success")
+    else:
+        flash("Could not remove share access.", "danger")
+    return redirect(url_for('sharing_page'))
