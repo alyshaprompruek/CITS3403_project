@@ -238,7 +238,7 @@
             });
         
             // Render chart if tasks exist
-            const tasks = {{ serialized_tasks | tojson | safe }};
+            const tasks = JSON.parse('{{ serialized_tasks | tojson | safe | escapejs }}');
             if (tasks && tasks.length > 0) {
                 renderCharts(tasks);
             }
