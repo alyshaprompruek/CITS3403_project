@@ -114,6 +114,7 @@ def calculate_user_statistics(user):
             required_score = None
         
         recommendations.append({
+            "unit_id":unit.id,
             "unit_code": unit.unit_code,
             "current_score": unit_score,
             "target": unit.target_score,

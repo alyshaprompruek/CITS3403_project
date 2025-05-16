@@ -50,7 +50,8 @@ def view_shared_dashboard(token):
         ranked_units=stats["ranked_units"],
         editUnitForm=editUnitForm,
         readonly_view=True,
-        shared_from=share.from_user
+        shared_from=share.from_user,
+        shared_unit_id=share.unit_selection
     )
 
 @application.route('/signup', methods=["GET","POST"])
@@ -382,6 +383,10 @@ def add_unit():
 @login_required
 def update_unit():
     editUnitForm = EditUnitForm()
+    try:
+        unit_id = editUnitForm.unit_id.data
+    except:
+        unit_id = None
     if editUnitForm.validate_on_submit():
         unit_id = editUnitForm.unit_id.data  # Use unit_id from the form
         unit = Unit.query.get(unit_id)
@@ -418,7 +423,7 @@ def update_unit():
             for error in errors:
                 flash(f"Error in {field}: {error}", "danger")
 
-    return redirect(url_for("track_grades"))
+    return redirect(url_for("track_grades", unit_id=unit_id))
 
 @application.route('/api/logout', methods=["POST"])
 def logout():
@@ -436,6 +441,8 @@ def settings():
 @login_required
 def sharing_page():
     form = ShareForm()
+
+    form.unit_selection.choices = [(unit.id, f"{unit.unit_code} | Sem {unit.semester} {unit.year}") for unit in current_user.units]
     # Fetch share records
     outgoing_shares = ShareAccess.query.filter_by(from_user=current_user.email).all()
     incoming_shares = ShareAccess.query.filter_by(to_user=current_user.email).all()
@@ -447,9 +454,15 @@ def sharing_page():
 @login_required
 def create_share():
     form = ShareForm()
+
+    # Set the choices for unit_selection before validation to avoid inconsistency
+    form.unit_selection.choices = [(unit.id, f"{unit.unit_code} | Sem {unit.semester} {unit.year}") 
+                                  for unit in current_user.units]
+    
     if form.validate_on_submit():
         email = form.email.data.strip().lower()
         expires_at = form.expires_at.data #is just date not datetime
+        unit_selection = form.unit_selection.data
 
         # Ensure the recipient email is not the same as the current user's email
         if email == current_user.email:
@@ -473,6 +486,7 @@ def create_share():
             share_token=token,
             from_user=current_user.email,
             to_user=email, 
+            unit_selection=unit_selection,
             expires_at=expires_at #sqlite will convert to datetime object at midnight
         )
 

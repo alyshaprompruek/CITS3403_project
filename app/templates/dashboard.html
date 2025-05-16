@@ -90,20 +90,22 @@
           <tbody>
             {% for item in unit_scores %}
               {% set unit = item.unit %}
-              <tr>
-                <td>{{ loop.index }}</td>
-                <td>{{ unit.year }} | Sem {{ unit.semester }}</td>
-                <td>{{ unit.name }}</td>
-                <td>{{ unit.unit_code }}</td>
-                <td>
-                  {% if unit.target_score %}
-                    {{ unit.target_score }}
-                  {% else %}
-                    Not Set
-                  {% endif %}
-                </td>
-                <td>{{ item.score | default('N/A', true) }}</td>
-              </tr>
+              {% if not shared_unit_id or shared_unit_id == unit.id %}
+                <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ unit.year }} | Sem {{ unit.semester }}</td>
+                  <td>{{ unit.name }}</td>
+                  <td>{{ unit.unit_code }}</td>
+                  <td>
+                    {% if unit.target_score %}
+                      {{ unit.target_score }}
+                    {% else %}
+                      Not Set
+                    {% endif %}
+                  </td>
+                  <td>{{ item.score | default('N/A', true) }}</td>
+                </tr>
+              {% endif %}
             {% endfor %}
           </tbody>
         </table>
@@ -130,19 +132,21 @@
           </thead>
           <tbody>
             {% for rec in recommendations %}
-            <tr>
-              <td>{{ rec.unit_code }}</td>
-              <td>
-                {% if rec.target %}
-                  {{ rec.target}}
-                {% else %}
-                  Not Set
-                {% endif %}
-              </td>
-              <td>{{ rec.current_score }}</td>
-              <td>{{ rec.remaining_weight }}</td>
-              <td>{{ rec.required_score | default('N/A', true) }}</td>
-            </tr>
+              {% if not shared_unit_id or shared_unit_id == rec.unit_id %}
+                <tr>
+                  <td>{{ rec.unit_code }}</td>
+                  <td>
+                    {% if rec.target %}
+                      {{ rec.target }}
+                    {% else %}
+                      Not Set
+                    {% endif %}
+                  </td>
+                  <td>{{ rec.current_score | default('N/A', true) }}</td>
+                  <td>{{ rec.remaining_weight | default('N/A', true) }}</td>
+                  <td>{{ rec.required_score | default('N/A', true) }}</td>
+                </tr>
+              {% endif %}
             {% endfor %}
           </tbody>
         </table>

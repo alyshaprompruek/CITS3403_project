@@ -57,6 +57,8 @@ class ShareAccess(db.Model):
     share_token = db.Column(db.String(64), unique=True, nullable=False)
     from_user = db.Column(db.String(120), nullable=False)
     to_user = db.Column(db.String(120), nullable=False)
+    unit_selection = db.Column(db.Integer, db.ForeignKey('unit.id'), nullable=False)
+    unit = db.relationship('Unit', backref=db.backref('share_accesses', lazy=True))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     expires_at = db.Column(db.DateTime, nullable=True)
 
