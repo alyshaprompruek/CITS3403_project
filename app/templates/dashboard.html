@@ -18,6 +18,12 @@
     {% endif %}
   {% endwith %}
 
+  {% if readonly_view and shared_from %}
+    <div class="alert alert-info text-center mb-4">
+      You are viewing {{ shared_from }}'s dashboard.
+    </div>
+  {% endif %}
+
   <!-- Summary Table -->
   <div class="card mb-4">
     <div class="card-header bg-primary text-white">
@@ -29,15 +35,33 @@
           <tbody>
             <tr>
               <th scope="row">WAM</th>
-              <td>{{ user.wam | default('N/A', true) }}</td>
+              <td>
+                {% if readonly_view %}
+                  {{ wam | default('N/A', true) }}
+                {% else %}
+                  {{ user.wam | default('N/A', true) }}
+                {% endif %}
+              </td>
             </tr>
             <tr>
               <th scope="row">GPA</th>
-              <td>{{ user.gpa | default('N/A', true) }}</td>
+              <td>
+                {% if readonly_view %}
+                  {{ gpa | default('N/A', true) }}
+                {% else %}
+                  {{ user.gpa | default('N/A', true) }}
+                {% endif %}
+              </td>
             </tr>
             <tr>
               <th scope="row">Top Unit</th>
-              <td>{{ user.top_unit | default('N/A', true) }}</td>
+              <td>
+                {% if readonly_view %}
+                  {{ top_unit | default('N/A', true) }}
+                {% else %}
+                  {{ user.top_unit | default('N/A', true) }}
+                {% endif %}
+              </td>
             </tr>
           </tbody>
         </table>

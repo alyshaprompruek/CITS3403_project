@@ -31,6 +31,12 @@ class Unit(db.Model):
     outline_url = db.Column(db.String(255), nullable=True)
     summary = db.Column(db.String(500), nullable=True)  # Store the unit summary
     links = db.Column(db.JSON, nullable=True)  # Store a list of dictionaries [{"name": "Link Name", "url": "Link URL"}]
+    tasks = db.relationship(
+        'Task',
+        backref=db.backref('unit', lazy=True),
+        cascade='all, delete',
+        passive_deletes=True
+    )
 
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -41,9 +47,8 @@ class Task(db.Model):
     grade = db.Column(db.Float, nullable=True)
     task_name = db.Column(db.String(120), nullable=True)
     date = db.Column(db.String(20), nullable=True)
-    unit_id = db.Column(db.Integer, db.ForeignKey('unit.id'), nullable=False)
+    unit_id = db.Column(db.Integer, db.ForeignKey('unit.id', ondelete='CASCADE'), nullable=False)
     user = db.relationship('User', backref=db.backref('tasks', lazy=True))
-    unit = db.relationship('Unit', backref=db.backref('tasks', lazy=True))
 
 
 # ShareAccess model for sharing records between users

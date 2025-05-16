@@ -37,6 +37,9 @@ def view_shared_dashboard(token):
     return render_template(
         "dashboard.html",
         user=shared_user,
+        wam=stats["wam"],
+        gpa=stats["gpa"],
+        top_unit=stats["top_unit"],
         unit_scores=stats["unit_scores"],
         recommendations=stats["recommendations"],
         ranked_units=stats["ranked_units"],
@@ -259,7 +262,7 @@ def delete_unit():
         try:
             db.session.delete(unit)
             db.session.commit()
-            flash("Unit deleted successfully.", "success")
+            flash("Unit and associated tasks deleted successfully.", "success")
         except Exception as e:
             db.session.rollback()
             flash(f"Failed to delete unit: {str(e)}", "danger")
@@ -412,7 +415,6 @@ def update_unit():
 
     return redirect(url_for("track_grades"))
 
-
 @application.route('/api/logout', methods=["POST"])
 def logout():
     logout_user()
@@ -422,6 +424,7 @@ def logout():
 @login_required
 def settings():
     return render_template('settings.html', user=current_user)
+
 
 # --- Sharing page and create_share logic ---
 @application.route('/sharing', methods=['GET'])
@@ -459,3 +462,17 @@ def create_share():
 
     flash("Failed to share. Please check the input.", "danger")
     return redirect(url_for('sharing_page'))
+
+@application.route('/remove_share', methods=['POST'])
+@login_required
+def remove_share():
+    share_id = request.form.get('share_id')
+    share = ShareAccess.query.get(share_id)
+    if share and share.from_user == current_user.email:
+        db.session.delete(share)
+        db.session.commit()
+        flash("Share access successfully removed.", "success")
+    else:
+        flash("Could not remove share access.", "danger")
+    return redirect(url_for('sharing_page'))
+
