@@ -84,7 +84,6 @@
             <td>{{ share.expires_at.strftime('%Y-%m-%d') if share.expires_at else 'N/A' }}</td>
             <td>{{ share.unit.unit_code }} | Sem {{ share.unit.semester }} {{ share.unit.year }}</td>
             <td>
-              <button class="btn btn-sm btn-warning">Edit</button>
               <form method="POST" action="{{ url_for('remove_share') }}" style="display:inline;" onsubmit="return confirm('Remove access for this user?');">
                 <input type="hidden" name="share_id" value="{{ share.id }}">
                 <button type="submit" class="btn btn-sm btn-danger">Remove</button>
