@@ -24,48 +24,32 @@
     </div>
   {% endif %}
 
-  <!-- Summary Table -->
+  <!-- Summary -->
   <div class="card mb-4">
     <div class="card-header bg-primary text-white">
       <h5 class="mb-0">Summary</h5>
     </div>
     <div class="card-body">
-      <div class="table-responsive">
-        <table class="table table-bordered table-sm">
-          <tbody>
-            <tr>
-              <th scope="row">WAM</th>
-              <td>
-                {% if readonly_view %}
-                  {{ wam | round(2) if wam is not none else 'N/A' }}
-                {% else %}
-                  {{ user.wam | round(2) if user.wam is not none else 'N/A' }}
-                {% endif %}
-              </td>
-            </tr>
-            <tr>
-              <th scope="row">GPA</th>
-              <td>
-                {% if readonly_view %}
-                  {{ gpa | round(2) if gpa is not none else 'N/A' }}
-                {% else %}
-                  {{ user.gpa | round(2) if user.gpa is not none else 'N/A' }}
-                {% endif %}
-              </td>
-            </tr>
-            <tr>
-              <th scope="row">Top Unit</th>
-              <td>
-                {% if readonly_view %}
-                  {{ top_unit | default('N/A', true) }}
-                {% else %}
-                  {{ user.top_unit | default('N/A', true) }}
-                {% endif %}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <table class="table table-bordered table-sm mb-0">
+        <tbody>
+          <tr>
+            <th scope="row">WAM</th>
+            <td>
+              {{ (wam if readonly_view else user.wam) | round(2) if (wam if readonly_view else user.wam) is not none else 'N/A' }}
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">GPA</th>
+            <td>
+              {{ (gpa if readonly_view else user.gpa) | round(2) if (gpa if readonly_view else user.gpa) is not none else 'N/A' }}
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">Top Unit</th>
+            <td>{{ (top_unit if readonly_view else user.top_unit) | default('N/A', true) }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
@@ -76,15 +60,15 @@
     </div>
     <div class="card-body">
       <div class="table-responsive">
-        <table class="table table-bordered table-hover">
-          <thead class="thead-light">
+        <table class="table table-bordered table-hover table-sm">
+          <thead class="table-light">
             <tr>
-              <th scope="col">Rank</th>
-              <th scope="col">Year | Sem</th>
-              <th scope="col">Unit Name</th>
-              <th scope="col">Unit Code</th>
-              <th scope="col">Target Grade</th>
-              <th scope="col">Grade</th>
+              <th>Rank</th>
+              <th>Year | Sem</th>
+              <th>Unit Name</th>
+              <th>Unit Code</th>
+              <th>Target Grade</th>
+              <th>Grade</th>
             </tr>
           </thead>
           <tbody>
@@ -96,16 +80,8 @@
                   <td>{{ unit.year }} | Sem {{ unit.semester }}</td>
                   <td>{{ unit.name }}</td>
                   <td>{{ unit.unit_code }}</td>
-                  <td>
-                    {% if unit.target_score %}
-                      {{ unit.target_score }}
-                    {% else %}
-                      Not Set
-                    {% endif %}
-                  </td>
-                 <td>
-                  {{ item.score | round(0, 'floor') | int if item.score is not none else 'N/A' }}
-                </td>
+                  <td>{{ unit.target_score if unit.target_score else 'Not Set' }}</td>
+                  <td>{{ item.score | round(0, 'floor') | int if item.score is not none else 'N/A' }}</td>
                 </tr>
               {% endif %}
             {% endfor %}
@@ -115,7 +91,7 @@
     </div>
   </div>
 
-  <!-- Recommendations Section -->
+  <!-- Recommendations -->
   <div class="card mb-4">
     <div class="card-header bg-success text-white">
       <h5 class="mb-0">Target Recommendations</h5>
@@ -137,13 +113,7 @@
               {% if not shared_unit_id or shared_unit_id == rec.unit_id %}
                 <tr>
                   <td>{{ rec.unit_code }}</td>
-                  <td>
-                    {% if rec.target %}
-                      {{ rec.target }}
-                    {% else %}
-                      Not Set
-                    {% endif %}
-                  </td>
+                  <td>{{ rec.target if rec.target else 'Not Set' }}</td>
                   <td>{{ rec.current_score | default('N/A', true) }}</td>
                   <td>{{ rec.remaining_weight | default('N/A', true) }}</td>
                   <td>{{ rec.required_score | default('N/A', true) }}</td>
@@ -155,113 +125,84 @@
       </div>
     </div>
   </div>
+
+  <!-- Edit Unit Modal -->
+  {% if editUnitForm %}
+    <div class="modal fade" id="editUnitModal" tabindex="-1" aria-labelledby="editUnitModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <form method="POST" action="{{ url_for('update_unit') }}">
+          {{ editUnitForm.hidden_tag() }}
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="editUnitModalLabel">Edit Unit</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              {{ editUnitForm.unit_id(id="editUnitId") }}
+              <div class="mb-3">
+                <label for="editUnitName" class="form-label">{{ editUnitForm.name.label }}</label>
+                {{ editUnitForm.name(class="form-control", id="editUnitName") }}
+              </div>
+              <div class="mb-3">
+                <label for="editUnitCode" class="form-label">{{ editUnitForm.unit_code.label }}</label>
+                {{ editUnitForm.unit_code(class="form-control", id="editUnitCode") }}
+              </div>
+              <div class="mb-3">
+                <label for="editUnitYear" class="form-label">{{ editUnitForm.year.label }}</label>
+                {{ editUnitForm.year(class="form-select", id="editUnitYear") }}
+              </div>
+              <div class="mb-3">
+                <label for="editUnitSemester" class="form-label">{{ editUnitForm.semester.label }}</label>
+                {{ editUnitForm.semester(class="form-select", id="editUnitSemester") }}
+              </div>
+              <div class="mb-3">
+                <label for="editUnitTargetScore" class="form-label">{{ editUnitForm.target_score.label }}</label>
+                {{ editUnitForm.target_score(class="form-control", id="editUnitTargetScore") }}
+              </div>
+            </div>
+            <div class="modal-footer">
+              {{ editUnitForm.submit(class="btn btn-primary") }}
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  {% endif %}
 </div>
 
-<!-- Edit Unit Modal -->
-<div class="modal fade" id="editUnitModal" tabindex="-1" aria-labelledby="editUnitModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="POST" action="{{ url_for('update_unit') }}">
-      {{ editUnitForm.hidden_tag() }}
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="editUnitModalLabel">Edit Unit</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          {{ editUnitForm.unit_id(id="editUnitId") }}
-          <div class="mb-3">
-            <label for="editUnitName" class="form-label">{{ editUnitForm.name.label }}</label>
-            {{ editUnitForm.name(class="form-control", id="editUnitName") }}
-          </div>
-          <div class="mb-3">
-            <label for="editUnitCode" class="form-label">{{ editUnitForm.unit_code.label }}</label>
-            {{ editUnitForm.unit_code(class="form-control", id="editUnitCode") }}
-          </div>
-          <div class="mb-3">
-            <label for="editUnitYear" class="form-label">{{ editUnitForm.year.label }}</label>
-            {{ editUnitForm.year(class="form-select", id="editUnitYear") }}
-          </div>
-          <div class="mb-3">
-            <label for="editUnitSemester" class="form-label">{{ editUnitForm.semester.label }}</label>
-            {{ editUnitForm.semester(class="form-select", id="editUnitSemester") }}
-          </div>
-          <div class="mb-3">
-            <label for="editUnitTargetScore" class="form-label">{{ editUnitForm.target_score.label }}</label>
-            {{ editUnitForm.target_score(class="form-control", id="editUnitTargetScore") }}
-          </div>
-        </div>
-        <div class="modal-footer">
-          {{ editUnitForm.submit(class="btn btn-primary") }}
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-<!-- Modal Script -->
+<!-- Script to populate Edit Modal -->
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const editModal = document.getElementById('editUnitModal');
-    
-    editModal.addEventListener('show.bs.modal', function(event) {
-      // Get the button that triggered the modal
-      const button = event.relatedTarget;
-      
-      // Extract data attributes from button
-      const unitId = button.getAttribute('data-unit-id');
-      const unitName = button.getAttribute('data-unit-name');
-      const unitCode = button.getAttribute('data-unit-code');
-      const unitYear = button.getAttribute('data-unit-year');
-      const unitSemester = button.getAttribute('data-unit-semester');
-      const unitTargetScore = button.getAttribute('data-unit-target');
-      
-      // Debug log to verify data is being captured
-      console.log('Modal opening with data:', {
-        unitId,
-        unitName,
-        unitCode,
-        unitYear,
-        unitSemester,
-        unitTargetScore
+  document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('editUnitModal');
+
+    if (modal) {
+      modal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const data = {
+          unit_id: button.getAttribute('data-unit-id'),
+          name: button.getAttribute('data-unit-name'),
+          code: button.getAttribute('data-unit-code'),
+          year: button.getAttribute('data-unit-year'),
+          semester: button.getAttribute('data-unit-semester'),
+          target: button.getAttribute('data-unit-target')
+        };
+
+        const idField = document.querySelector('#editUnitModal input[name="unit_id"]');
+        const nameField = document.getElementById('editUnitName');
+        const codeField = document.getElementById('editUnitCode');
+        const yearField = document.getElementById('editUnitYear');
+        const semesterField = document.getElementById('editUnitSemester');
+        const targetField = document.getElementById('editUnitTargetScore');
+
+        if (idField) idField.value = data.unit_id || '';
+        if (nameField) nameField.value = data.name || '';
+        if (codeField) codeField.value = data.code || '';
+        if (yearField) yearField.value = data.year || '';
+        if (semesterField) semesterField.value = data.semester || '';
+        if (targetField) targetField.value = data.target || '';
       });
-      
-      // Get form field elements
-      const idField = document.querySelector('#editUnitModal input[name="unit_id"]');
-      const nameField = document.getElementById('editUnitName');
-      const codeField = document.getElementById('editUnitCode');
-      const yearField = document.getElementById('editUnitYear');
-      const semesterField = document.getElementById('editUnitSemester');
-      const targetScoreField = document.getElementById('editUnitTargetScore');
-      
-      // Set form field values
-      if (idField) {
-        idField.value = unitId || '';
-        console.log('Set unit_id to:', idField.value); // Debug log
-      } else {
-        console.error('unit_id field not found');
-      }
-      
-      if (nameField) nameField.value = unitName || '';
-      if (codeField) codeField.value = unitCode || '';
-      if (yearField) yearField.value = unitYear || '';
-      if (semesterField) semesterField.value = unitSemester || '';
-      if (targetScoreField) {
-        targetScoreField.value = unitTargetScore || '';
-        console.log('Set target_score to:', targetScoreField.value); // Debug log
-      } else {
-        console.error('target_score field not found');
-      }
-      
-      // Verify values were set correctly
-      console.log('Form populated with values:', {
-        id: idField ? idField.value : 'field not found',
-        name: nameField ? nameField.value : 'field not found',
-        code: codeField ? codeField.value : 'field not found',
-        year: yearField ? yearField.value : 'field not found',
-        semester: semesterField ? semesterField.value : 'field not found',
-        target_score: targetScoreField ? targetScoreField.value : 'field not found'
-      });
-    });
+    }
   });
 </script>
 {% endblock %}

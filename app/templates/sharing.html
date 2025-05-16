@@ -1,158 +1,160 @@
 {% extends "base.html" %}
 
 {% block head %}
-<title>Sharing | Grade Tracker</title>
-<style>
-  .modal {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.7);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 1050;
-  }
-  .modal.hidden {
-    display: none;
-  }
-  .modal-content {
-    background: #212529;
-    padding: 25px;
-    border-radius: 10px;
-    max-width: 500px;
-    width: 90%;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
-  }
-</style>
-<script>
-  function openShareModal() {
-    document.getElementById('shareModal').classList.remove('hidden');
-  }
+  <title>Sharing | Grade Tracker</title>
+  <style>
+    .modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1050;
+    }
+    .modal.hidden {
+      display: none;
+    }
+    .modal-content {
+      background: #212529;
+      padding: 25px;
+      border-radius: 10px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+  </style>
+  <script>
+    function openShareModal() {
+      document.getElementById('shareModal').classList.remove('hidden');
+    }
 
-  function closeShareModal() {
-    document.getElementById('shareModal').classList.add('hidden');
-  }
+    function closeShareModal() {
+      document.getElementById('shareModal').classList.add('hidden');
+    }
 
-  window.addEventListener('DOMContentLoaded', () => {
-    const fadeableAlerts = document.querySelectorAll('.alert.fadeable');
-    fadeableAlerts.forEach(alert => {
-      setTimeout(() => {
-        alert.style.transition = 'opacity 0.5s ease-out';
-        alert.style.opacity = '0';
-        setTimeout(() => alert.remove(), 500);
-      }, 3000);
+    window.addEventListener('DOMContentLoaded', () => {
+      const fadeableAlerts = document.querySelectorAll('.alert.fadeable');
+      fadeableAlerts.forEach(alert => {
+        setTimeout(() => {
+          alert.style.transition = 'opacity 0.5s ease-out';
+          alert.style.opacity = '0';
+          setTimeout(() => alert.remove(), 500);
+        }, 3000);
+      });
     });
-  });
-</script>
+  </script>
 {% endblock %}
 
 {% block body %}
-<div class="container py-5">
-  <h2 class="text-center mb-4">Manage Sharing</h2>
+  <div class="container py-5">
+    <h2 class="text-center mb-4">Manage Sharing</h2>
 
-  <!-- Flash Messages -->
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        <div class="alert alert-{{ category }} alert-dismissible fadeable fade show m-3" role="alert">
-          {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fadeable fade show m-3" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Outgoing Shares -->
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <span>I've Shared With</span>
+        <button class="btn btn-light btn-sm" onclick="openShareModal()">➕ New Share</button>
+      </div>
+      <div class="card-body">
+        <table class="table table-bordered table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>Email</th>
+              <th>Expires</th>
+              <th>Unit</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for share in outgoing_shares %}
+              <tr>
+                <td>{{ share.to_user }}</td>
+                <td>{{ share.expires_at.strftime('%Y-%m-%d') if share.expires_at else 'N/A' }}</td>
+                <td>{{ share.unit.unit_code }} | Sem {{ share.unit.semester }} {{ share.unit.year }}</td>
+                <td>
+                  <form method="POST" action="{{ url_for('remove_share') }}" style="display:inline;" onsubmit="return confirm('Remove access for this user?');">
+                    <input type="hidden" name="share_id" value="{{ share.id }}">
+                    <button type="submit" class="btn btn-sm btn-danger">Remove</button>
+                  </form>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="4" class="text-center text-muted">No outgoing shares yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Incoming Shares -->
+    <div class="card">
+      <div class="card-header bg-secondary text-white">Shared With Me</div>
+      <div class="card-body">
+        <table class="table table-bordered table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>From</th>
+              <th>Unit</th>
+              <th>View</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for share in incoming_shares %}
+              <tr>
+                <td>{{ share.from_user }}</td>
+                <td>{{ share.unit.unit_code }} | Sem {{ share.unit.semester }} {{ share.unit.year }}</td>
+                <td>
+                  <a href="/share/view/{{ share.share_token }}" class="btn btn-sm btn-outline-primary">View</a>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="3" class="text-center text-muted">No shares received yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share Modal -->
+  <div id="shareModal" class="modal hidden">
+    <div class="modal-content bg-dark text-white">
+      <h3 class="mb-4 text-center">New Share</h3>
+      <form method="POST" action="{{ url_for('create_share') }}">
+        {{ form.csrf_token }}
+        <div class="form-group mb-3">
+          {{ form.email.label(class="form-label") }}
+          {{ form.email(class="form-control bg-dark text-white border-secondary", placeholder="Recipient Email") }}
         </div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
-  
-  <!-- Outgoing Shares -->
-  <div class="card mb-4">
-    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-      <span>I've Shared With</span>
-      <button class="btn btn-light btn-sm" onclick="openShareModal()">+ New Share</button>
-    </div>
-    <div class="card-body">
-      <table class="table table-bordered table-hover">
-        <thead class="table-light">
-          <tr>
-            <th>Email</th>
-            <th>Expires</th>
-            <th>Unit</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for share in outgoing_shares %}
-          <tr>
-            <td>{{ share.to_user }}</td>
-            <td>{{ share.expires_at.strftime('%Y-%m-%d') if share.expires_at else 'N/A' }}</td>
-            <td>{{ share.unit.unit_code }} | Sem {{ share.unit.semester }} {{ share.unit.year }}</td>
-            <td>
-              <form method="POST" action="{{ url_for('remove_share') }}" style="display:inline;" onsubmit="return confirm('Remove access for this user?');">
-                <input type="hidden" name="share_id" value="{{ share.id }}">
-                <button type="submit" class="btn btn-sm btn-danger">Remove</button>
-              </form>
-            </td>
-          </tr>
-          {% else %}
-          <tr>
-            <td colspan="4" class="text-center text-muted">No outgoing shares yet.</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+        <div class="form-group mb-3">
+          {{ form.unit_selection.label(class="form-label") }}
+          {{ form.unit_selection(class="form-control bg-dark text-white border-secondary") }}
+        </div>
+        <div class="form-group mb-4">
+          {{ form.expires_at.label(class="form-label") }}
+          {{ form.expires_at(class="form-control bg-dark text-white border-secondary") }}
+        </div>
+        <div class="d-flex justify-content-between">
+          {{ form.submit(class="btn btn-success px-4") }}
+          <button type="button" class="btn btn-secondary px-4" onclick="closeShareModal()">Cancel</button>
+        </div>
+      </form>
     </div>
   </div>
-
-  <!-- Incoming Shares -->
-  <div class="card">
-    <div class="card-header bg-secondary text-white">Shared With Me</div>
-    <div class="card-body">
-      <table class="table table-bordered table-hover">
-        <thead class="table-light">
-          <tr>
-            <th>From</th>
-            <th>Unit</th>
-            <th>View</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for share in incoming_shares %}
-          <tr>
-            <td>{{ share.from_user }}</td>
-            <td>{{ share.unit.unit_code }} | Sem {{ share.unit.semester }} {{ share.unit.year }}</td>
-            <td><a href="/share/view/{{ share.share_token }}" class="btn btn-sm btn-outline-primary">View</a></td>
-          </tr>
-          {% else %}
-          <tr>
-            <td colspan="2" class="text-center text-muted">No shares received yet.</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- Share Modal -->
-<div id="shareModal" class="modal hidden">
-  <div class="modal-content bg-dark text-white">
-    <h3 class="mb-4 text-center">New Share</h3>
-    <form method="POST" action="{{ url_for('create_share') }}">
-      {{ form.csrf_token }}
-      <div class="form-group mb-3">
-        {{ form.email.label(class="form-label") }}
-        {{ form.email(class="form-control bg-dark text-white border-secondary", placeholder="Recipient Email") }}
-      </div>
-      <div class="form-group mb-3">
-        {{ form.unit_selection.label(class="form-label") }}
-        {{ form.unit_selection(class="form-control bg-dark text-white border-secondary") }}
-      </div>
-      <div class="form-group mb-4">
-        {{ form.expires_at.label(class="form-label") }}
-        {{ form.expires_at(class="form-control bg-dark text-white border-secondary") }}
-      </div>
-      <div class="d-flex justify-content-between">
-        {{ form.submit(class="btn btn-success px-4") }}
-        <button type="button" class="btn btn-secondary px-4" onclick="closeShareModal()">Cancel</button>
-      </div>
-    </form>
-  </div>
-</div>
 {% endblock %}
