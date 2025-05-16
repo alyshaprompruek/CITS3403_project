@@ -72,6 +72,10 @@ def fetch_unit_details_and_summary(unit_code, gemini_api_key):
 
         description = soup.find(string="Description").find_next('p').text if soup.find(string="Description") else ""
         outcomes = soup.find(string="Outcomes").find_next('p').text if soup.find(string="Outcomes") else ""
+        
+        print("Description:", description)
+        print("Outcomes:", outcomes)
+        
         unit_text = f"Description: {description}\nOutcomes: {outcomes}"
 
         gemini_api_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
