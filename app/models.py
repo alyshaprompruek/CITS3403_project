@@ -1,5 +1,6 @@
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
+import re
 
 class User(db.Model):
     student_id = db.Column(db.Integer, primary_key=True)
@@ -11,7 +12,7 @@ class User(db.Model):
 
     def check_password(self, raw_password):
         return check_password_hash(self.password_hash, raw_password)
-
+    
 class Unit(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     semester = db.Column(db.String(20), nullable=False)

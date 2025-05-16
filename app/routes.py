@@ -1,5 +1,21 @@
-from app import application
-from app.models import User
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file, flash
+from app.models import User, Unit, Task, ShareAccess
+from app.forms import SignUpForm, LoginForm, AddUnitForm, AddTaskForm, EditUnitForm, ShareForm
+from datetime import datetime, timedelta
+import secrets
+from app import application, db
+from app.services.analytics import calculate_user_statistics
+from app.utils import fetch_unit_details_and_summary  # Import the utility function
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+API_KEY = os.getenv("API_KEY")
+
+@application.route('/')
+def homepage():
+    user_id = session.get("user_id", None)
+    return render_template('homepage.html', user_id=user_id)
 
 @application.route("/share/view/<token>")
 def view_shared_dashboard(token):
@@ -31,25 +47,6 @@ def view_shared_dashboard(token):
         readonly_view=True,
         shared_from=share.from_user
     )
-
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file, flash
-from app.models import User, Unit, Task, ShareAccess
-from app.forms import SignUpForm, LoginForm, AddUnitForm, AddTaskForm, EditUnitForm, ShareForm
-from datetime import datetime, timedelta
-import secrets
-from app import application, db
-from app.services.analytics import calculate_user_statistics
-from app.utils import fetch_unit_details_and_summary  # Import the utility function
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
-API_KEY = os.getenv("API_KEY")
-
-@application.route('/')
-def homepage():
-    user_id = session.get("user_id", None)
-    return render_template('homepage.html', user_id=user_id)
 
 @application.route('/signup', methods=["GET","POST"])
 def signup():
@@ -86,7 +83,13 @@ def signup():
                 error = f"An error occurred during registration: {e}"
 
         else:
-            error = "Please check your information and try again."
+            # Collect all form validation errors into a single message
+            error_messages = []
+            for field, errors in form.errors.items():
+                for err in errors:
+                    error_messages.append(err)
+
+            error = " ".join(error_messages)  # Or use '<br>'.join(...) for line breaks
 
         return render_template('signup.html', form=form, error=error)
 
