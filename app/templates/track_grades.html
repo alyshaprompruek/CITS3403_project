@@ -200,7 +200,7 @@
                 Add Task
               </button>
 
-              <!-- Hidden container carrying our JSON data -->
+              <!-- Hidden JSON data for the chart -->
               <div id="chartData"
                    data-tasks='{{ serialized_tasks|tojson|escapejs }}'
                    data-target='{{ target_score }}'
@@ -316,3 +316,16 @@
         </div>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Initialize chart after DOM loads -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const el = document.getElementById('chartData');
+    const tasks = JSON.parse(el.dataset.tasks);
+    const targetScore = Number(el.dataset.target);
+    renderCharts(tasks, targetScore);
+  });
+</script>
+{% endblock %}
