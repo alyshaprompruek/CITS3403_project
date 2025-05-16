@@ -32,6 +32,7 @@ pytest-flask==1.0.0
 requests==2.32.3
 six==1.17.0
 soupsieve==2.7
+selenium>=4.19.0
 SQLAlchemy==2.0.40
 typing_extensions==4.13.2
 urllib3==2.4.0
