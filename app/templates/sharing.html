@@ -49,10 +49,22 @@
 <div class="container py-5">
   <h2 class="text-center mb-4">Manage Sharing</h2>
 
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fadeable fade show m-3" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  
   <!-- Outgoing Shares -->
   <div class="card mb-4">
     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-      <span>I Shared With</span>
+      <span>I've Shared With</span>
       <button class="btn btn-light btn-sm" onclick="openShareModal()">+ New Share</button>
     </div>
     <div class="card-body">
@@ -60,7 +72,6 @@
         <thead class="table-light">
           <tr>
             <th>Email</th>
-            <th>Link</th>
             <th>Expires</th>
             <th>Actions</th>
           </tr>
@@ -69,12 +80,13 @@
           {% for share in outgoing_shares %}
           <tr>
             <td>{{ share.to_user }}</td>
-            <td>/share/view/{{ share.share_token }}</td>
             <td>{{ share.expires_at.strftime('%Y-%m-%d') if share.expires_at else 'N/A' }}</td>
             <td>
-              <button class="btn btn-sm btn-secondary" onclick="navigator.clipboard.writeText('/share/view/{{ share.share_token }}')">Copy</button>
               <button class="btn btn-sm btn-warning">Edit</button>
-              <button class="btn btn-sm btn-danger">Delete</button>
+              <form method="POST" action="{{ url_for('remove_share') }}" style="display:inline;" onsubmit="return confirm('Remove access for this user?');">
+                <input type="hidden" name="share_id" value="{{ share.id }}">
+                <button type="submit" class="btn btn-sm btn-danger">Remove</button>
+              </form>
             </td>
           </tr>
           {% else %}
