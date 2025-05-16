@@ -132,7 +132,6 @@ def login():
         return render_template('login.html', form=form, error=error)
 
 @application.route('/dashboard')
-@login_required
 def dashboard():
     stats = calculate_user_statistics(current_user)
 
