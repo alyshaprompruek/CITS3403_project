@@ -1,12 +1,25 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SelectField, SubmitField, FloatField, DateField, TextAreaField, HiddenField
-from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional
+from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional, Regexp
 from datetime import datetime
 
 
 class SignUpForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
+    email = StringField(
+        'Email', 
+        validators=[DataRequired(), Email(), Length(max=120)]
+    )
+    password = PasswordField(
+        'Password', 
+        validators=[
+            DataRequired(),
+            Length(min=8, message="Password must be at least 8 characters long."),
+            Regexp(
+                r"^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
+                message="Password does not meet complexity requirements"
+            )
+        ]
+    )
     submit = SubmitField('Sign Up')
     
 class LoginForm(FlaskForm):
@@ -15,7 +28,6 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Log In')
 
 class AddUnitForm(FlaskForm):
-    unit_id = HiddenField('Unit ID')  # <-- Add this line
     name = StringField('Unit Name', validators=[DataRequired(), Length(max=120)])
     unit_code = StringField('Unit Code', validators=[DataRequired(), Length(max=20)])
     semester = SelectField('Semester', choices=[('1', '1'), ('2', '2')], validators=[DataRequired()])

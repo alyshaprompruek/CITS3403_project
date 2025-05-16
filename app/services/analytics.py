@@ -72,20 +72,17 @@ def calculate_required_score(target_score, current_score, remaining_weight):
         return 0
 
 
-def calculate_user_statistics(user_id):
+def calculate_user_statistics(user):
     """
     Calculates and returns various statistics for a user, including WAM, GPA, and unit-specific data.
 
     Args:
-        user_id: The ID of the user.
+        user
 
     Returns:
         A dictionary containing the calculated statistics.
     """
-    user = User.query.get(user_id)  # Assuming User.query.get exists
-    if user is None:
-        return None #Handle the user not existing
-    units = Unit.query.filter_by(user_id=user_id).all() # Assuming Unit.query.filter_by exists
+    units = Unit.query.filter_by(user_id=user.student_id).all() # Assuming Unit.query.filter_by exists
 
     unit_scores = []
     ranked_units = []

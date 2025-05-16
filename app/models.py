@@ -1,17 +1,24 @@
-from app import db
+from app import db, login
+from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+import re
+from datetime import datetime
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     student_id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
+
+    #Override usermixins get id as its assumed pk is id but we have it as student_id
+    def get_id(self):
+        return str(self.student_id)  # Flask-Login expects a string
 
     def set_password(self, raw_password):
         self.password_hash = generate_password_hash(raw_password)
 
     def check_password(self, raw_password):
         return check_password_hash(self.password_hash, raw_password)
-
+    
 class Unit(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     semester = db.Column(db.String(20), nullable=False)
@@ -45,8 +52,6 @@ class Task(db.Model):
 
 
 # ShareAccess model for sharing records between users
-from datetime import datetime
-
 class ShareAccess(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     share_token = db.Column(db.String(64), unique=True, nullable=False)
@@ -54,3 +59,7 @@ class ShareAccess(db.Model):
     to_user = db.Column(db.String(120), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     expires_at = db.Column(db.DateTime, nullable=True)
+
+@login.user_loader
+def load_user(student_id):
+    return User.query.get(student_id)

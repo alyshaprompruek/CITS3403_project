@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
 from app.config import Config
 import os
 
@@ -8,6 +9,8 @@ application = Flask(__name__)
 application.config.from_object(Config)
 db = SQLAlchemy(application)
 migrate = Migrate(application, db)
+login = LoginManager(application)
+login.login_view = 'login'
 
 # Enable SQLite foreign key constraints for ON DELETE CASCADE support
 from sqlalchemy import event
