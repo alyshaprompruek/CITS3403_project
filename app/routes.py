@@ -450,28 +450,6 @@ def update_unit():
     return redirect(url_for("dashboard"))
 
 
-@application.route('/api/logout', methods=["POST"])
-def logout():
-    session.pop("user_id", None)
-    return redirect(url_for('homepage'))
-
-@application.route('/settings')
-def settings():
-    if "user_id" in session: 
-        user_id = session["user_id"]
-        # Query the database to get the complete user object
-        user = User.query.get(user_id)
-        # Check if user exists in database
-        if user:
-            return render_template('settings.html', user=user)
-        else:
-            # User ID in session but not found in database - clear session and redirect
-            session.pop("user_id", None)
-    return redirect(url_for('homepage'))
-
-
-
-
 # --- Sharing page and create_share logic ---
 @application.route('/sharing', methods=['GET'])
 def sharing_page():
@@ -524,7 +502,27 @@ def remove_share():
     if share and share.from_user == user.email:
         db.session.delete(share)
         db.session.commit()
-        flash("Share access removed.", "success")
+        flash("Share access successfully removed.", "success")
     else:
         flash("Could not remove share access.", "danger")
     return redirect(url_for('sharing_page'))
+
+@application.route('/api/logout', methods=["POST"])
+def logout():
+    session.pop("user_id", None)
+    session.pop("_flashes", None)
+    return redirect(url_for('homepage'))
+
+@application.route('/settings')
+def settings():
+    if "user_id" in session: 
+        user_id = session["user_id"]
+        # Query the database to get the complete user object
+        user = User.query.get(user_id)
+        # Check if user exists in database
+        if user:
+            return render_template('settings.html', user=user)
+        else:
+            # User ID in session but not found in database - clear session and redirect
+            session.pop("user_id", None)
+    return redirect(url_for('homepage'))
