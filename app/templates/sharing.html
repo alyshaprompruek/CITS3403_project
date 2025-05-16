@@ -73,6 +73,7 @@
           <tr>
             <th>Email</th>
             <th>Expires</th>
+            <th>Unit</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -81,6 +82,7 @@
           <tr>
             <td>{{ share.to_user }}</td>
             <td>{{ share.expires_at.strftime('%Y-%m-%d') if share.expires_at else 'N/A' }}</td>
+            <td>{{ share.unit.unit_code }} | Sem {{ share.unit.semester }} {{ share.unit.year }}</td>
             <td>
               <button class="btn btn-sm btn-warning">Edit</button>
               <form method="POST" action="{{ url_for('remove_share') }}" style="display:inline;" onsubmit="return confirm('Remove access for this user?');">
@@ -107,6 +109,7 @@
         <thead class="table-light">
           <tr>
             <th>From</th>
+            <th>Unit</th>
             <th>View</th>
           </tr>
         </thead>
@@ -114,6 +117,7 @@
           {% for share in incoming_shares %}
           <tr>
             <td>{{ share.from_user }}</td>
+            <td>{{ share.unit.unit_code }} | Sem {{ share.unit.semester }} {{ share.unit.year }}</td>
             <td><a href="/share/view/{{ share.share_token }}" class="btn btn-sm btn-outline-primary">View</a></td>
           </tr>
           {% else %}
@@ -136,6 +140,10 @@
       <div class="form-group mb-3">
         {{ form.email.label(class="form-label") }}
         {{ form.email(class="form-control bg-dark text-white border-secondary", placeholder="Recipient Email") }}
+      </div>
+      <div class="form-group mb-3">
+        {{ form.unit_selection.label(class="form-label") }}
+        {{ form.unit_selection(class="form-control bg-dark text-white border-secondary") }}
       </div>
       <div class="form-group mb-4">
         {{ form.expires_at.label(class="form-label") }}

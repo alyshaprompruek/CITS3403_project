@@ -72,12 +72,9 @@ class AddTaskForm(FlaskForm):
     unit_id = HiddenField('Unit ID', validators=[DataRequired()]) #needed so it can be passed to the endpoint 
     submit = SubmitField('Add Task')
 
-
-
-
-
 # ShareForm for sharing page
 class ShareForm(FlaskForm):
     email = StringField('Recipient Email', validators=[DataRequired(), Email(), Length(max=120)])
-    expires_at = DateField('Expiry Date', validators=[Optional()])
+    expires_at = DateField('Expiry Date', validators=[DataRequired()])
+    unit_selection = SelectField('Select Unit to Share', validators=[DataRequired()])
     submit = SubmitField('Share')
