@@ -22,6 +22,9 @@ def view_shared_dashboard(token):
     return render_template(
         "dashboard.html",
         user=shared_user,
+        wam=stats["wam"],
+        gpa=stats["gpa"],
+        top_unit=stats["top_unit"],
         unit_scores=stats["unit_scores"],
         recommendations=stats["recommendations"],
         ranked_units=stats["ranked_units"],
