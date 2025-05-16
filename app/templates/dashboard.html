@@ -37,9 +37,9 @@
               <th scope="row">WAM</th>
               <td>
                 {% if readonly_view %}
-                  {{ wam | default('N/A', true) }}
+                  {{ wam | round(2) if wam is not none else 'N/A' }}
                 {% else %}
-                  {{ user.wam | default('N/A', true) }}
+                  {{ user.wam | round(2) if user.wam is not none else 'N/A' }}
                 {% endif %}
               </td>
             </tr>
@@ -47,9 +47,9 @@
               <th scope="row">GPA</th>
               <td>
                 {% if readonly_view %}
-                  {{ gpa | default('N/A', true) }}
+                  {{ gpa | round(2) if gpa is not none else 'N/A' }}
                 {% else %}
-                  {{ user.gpa | default('N/A', true) }}
+                  {{ user.gpa | round(2) if user.gpa is not none else 'N/A' }}
                 {% endif %}
               </td>
             </tr>
@@ -103,7 +103,9 @@
                       Not Set
                     {% endif %}
                   </td>
-                  <td>{{ item.score | default('N/A', true) }}</td>
+                 <td>
+                  {{ item.score | round(0, 'floor') | int if item.score is not none else 'N/A' }}
+                </td>
                 </tr>
               {% endif %}
             {% endfor %}
