@@ -49,3 +49,11 @@ git ad
 python3 app.py
 ```
 
+## Running Tests
+
+To run the unit tests, use the following command:
+
+```bash
+pytest tests/unit/
+```
+
