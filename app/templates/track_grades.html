@@ -264,7 +264,7 @@
                             </div>
                             <div class="mb-3">
                                 {{ addUnitForm.target_score.label(class="form-label fw-medium") }}
-                                {{ addUnitForm.target_score(class="form-control", placeholder="Optional (eg 80)") }}
+                                {{ addUnitForm.target_score(class="form-control", placeholder="Eg, 80)") }}
                             </div>
                             <div class="d-grid">
                                 {{ addUnitForm.submit(class="btn btn-primary") }}
@@ -291,8 +291,8 @@
                         <!-- Unit Details Panel -->
                         <div class="card mb-3">
                           <div class="card-header d-flex justify-content-between align-items-center bg-light">
-                            <h5 class="mb-0">Unit Details</h5>
-                            <button class="btn btn-sm btn-outline-secondary"
+                            <h5 class="mb-0 text-secondary">Unit Details</h5>
+                            <button class="btn btn-sm btn-outline-secondary bg-body text-white"
                                     data-bs-toggle="modal"
                                     data-bs-target="#editUnitModal"
                                     data-unit-id="{{ selected_unit.id }}"
@@ -324,7 +324,7 @@
                               </tr>
                               <tr>
                                 <th>Target Score:</th>
-                                <td>{{ selected_unit.target_score if selected_unit.target_score else "Not Set" }}</td>
+                                <td>{{ selected_unit.target_score }}</td>
                               </tr>
                             </table>
                           </div>

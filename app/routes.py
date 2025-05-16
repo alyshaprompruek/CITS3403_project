@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file, flash
+from flask_login import login_required, login_user, logout_user, current_user
 from app.models import User, Unit, Task, ShareAccess
 from app.forms import SignUpForm, LoginForm, AddUnitForm, AddTaskForm, EditUnitForm, ShareForm
 from datetime import datetime, timedelta
@@ -14,15 +15,11 @@ API_KEY = os.getenv("API_KEY")
 
 @application.route('/')
 def homepage():
-    user_id = session.get("user_id", None)
-    return render_template('homepage.html', user_id=user_id)
+    return render_template('homepage.html')
 
 @application.route("/share/view/<token>")
+@login_required
 def view_shared_dashboard(token):
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    current_user = User.query.get(session["user_id"])
     share = ShareAccess.query.filter_by(share_token=token).first()
 
     if not share or share.to_user != current_user.email:
@@ -75,7 +72,8 @@ def signup():
                 db.session.add(new_user)
                 db.session.commit()
 
-                session["user_id"] = new_user.student_id
+                # Put the user as current_user using the login_user function
+                login_user(new_user)
                 return redirect(url_for('dashboard'))
 
             except Exception as e:
@@ -112,7 +110,7 @@ def login():
                 
                 # Check if user exists and password matches
                 if user and user.check_password(password): #hash
-                    session["user_id"] = user.student_id
+                    login_user(user)
                     return redirect(url_for('dashboard'))
                 else:
                     error = "Invalid email or password."
@@ -125,51 +123,31 @@ def login():
         return render_template('login.html', form=form, error=error)
 
 @application.route('/dashboard')
+@login_required
 def dashboard():
-    if "user_id" in session: 
-        user_id = session["user_id"]
-        
-        # Query the database to get the complete user object
-        user = User.query.get(user_id)
-        
-        # Check if user exists in database
-        if user:
-            stats = calculate_user_statistics(user_id)
+    stats = calculate_user_statistics(current_user)
 
-            user.wam = stats["wam"]
-            user.gpa = stats["gpa"]
-            user.top_unit = stats["top_unit"]
+    current_user.wam = stats["wam"]
+    current_user.gpa = stats["gpa"]
+    current_user.top_unit = stats["top_unit"]
 
-            editUnitForm = EditUnitForm()
+    editUnitForm = EditUnitForm()
 
-            return render_template("dashboard.html", user=user, unit_scores=stats["unit_scores"],
-                                   recommendations=stats["recommendations"],
-                                   ranked_units=stats["ranked_units"],
-                                   editUnitForm=editUnitForm,
-                                   )
-        else:
-            # User ID in session but not found in database - clear session and redirect
-            session.pop("user_id", None)
-    return redirect(url_for('homepage'))
+    return render_template("dashboard.html", user=current_user, unit_scores=stats["unit_scores"],
+                            recommendations=stats["recommendations"],
+                            ranked_units=stats["ranked_units"],
+                            editUnitForm=editUnitForm,
+                            )
 
 @application.route('/track_grades', methods=['GET', 'POST'])
+@login_required
 def track_grades():
-    if 'user_id' not in session:
-        flash('Please log in to access this page.', 'danger')
-        return redirect(url_for('homepage'))
-
-    user = User.query.get(session['user_id'])
-    if not user:
-        session.pop('user_id', None)
-        flash('User not found. Please log in again.', 'danger')
-        return redirect(url_for('homepage'))
-
     add_unit_form = AddUnitForm()
     add_task_form = AddTaskForm()
     edit_unit_form = EditUnitForm()
 
     # Sort units by year (descending), then semester (descending)
-    sorted_units = sorted(user.units, key=lambda u: (-u.year, -int(u.semester)))
+    sorted_units = sorted(current_user.units, key=lambda u: (-u.year, -int(u.semester)))
 
     # Get selected unit
     selected_unit = None
@@ -182,7 +160,7 @@ def track_grades():
         unit_id = request.args.get('unit_id')
 
     if unit_id:
-        selected_unit = Unit.query.filter_by(id=unit_id, user_id=user.student_id).first()
+        selected_unit = Unit.query.filter_by(id=unit_id, user_id=current_user.student_id).first()
         if not selected_unit:
             flash('Invalid unit selected.', 'danger')
             return redirect(url_for('track_grades'))  # Clear query params
@@ -260,7 +238,7 @@ def track_grades():
 
     return render_template(
         'track_grades.html',
-        user=user,
+        user=current_user,
         sorted_units=sorted_units,
         addUnitForm=add_unit_form,
         addTaskForm=add_task_form,
@@ -272,15 +250,12 @@ def track_grades():
     )
 
 @application.route('/delete_unit', methods=['POST'])
+@login_required
 def delete_unit():
-    if "user_id" not in session:
-        flash("You must be logged in to delete a unit.", "danger")
-        return redirect(url_for("homepage"))
-
     unit_id = request.form.get("unit_id")
     unit = Unit.query.get(unit_id)
 
-    if unit and unit.user_id == session["user_id"]:
+    if unit and unit.user_id == current_user.student_id:
         try:
             db.session.delete(unit)
             db.session.commit()
@@ -294,12 +269,8 @@ def delete_unit():
     return redirect(url_for("track_grades"))
 
 @application.route('/api/add_task', methods=["POST"])
+@login_required
 def add_task():
-    if "user_id" not in session:
-        flash('Unauthorized. Please log in.', 'danger')
-        return redirect(url_for('track_grades'))
-
-    user_id = session["user_id"]
     add_task_form = AddTaskForm()
 
     if not add_task_form.validate_on_submit():
@@ -308,7 +279,7 @@ def add_task():
 
     unit_id = add_task_form.unit_id.data
     unit = Unit.query.get(unit_id)
-    if not unit or unit.user_id != user_id:
+    if not unit or unit.user_id != current_user.student_id:
         flash('Invalid unit selected.', 'danger')
         return redirect(url_for('track_grades', unit_id=unit_id))
 
@@ -321,7 +292,7 @@ def add_task():
 
     try:
         new_task = Task(
-            user_id=user_id,
+            user_id=current_user.student_id,
             unit_id=unit_id,
             task_name=add_task_form.task_name.data,
             grade=add_task_form.score.data,
@@ -344,21 +315,12 @@ def add_task():
         return redirect(url_for('track_grades', unit_id=unit_id))
 
 @application.route('/api/add_unit', methods=["POST"])
+@login_required
 def add_unit():
-    if "user_id" not in session:
-        flash('Please log in to access this page.', 'danger')
-        return redirect(url_for('homepage'))
-
-    user_id = session["user_id"]
     add_unit_form = AddUnitForm()
-    user = User.query.get(user_id)
-
-    if not user:
-        session.pop('user_id', None)
-        flash('User not found. Please log in again.', 'danger')
-        return redirect(url_for('homepage'))
 
     if not add_unit_form.validate_on_submit():
+        print(add_unit_form.errors)  # Debugging: Print form validation errors to the console
         flash('Invalid form data. Please check your input.', 'danger')
         return redirect(url_for('track_grades'))
 
@@ -375,7 +337,7 @@ def add_unit():
             unit_code=unit_code,
             semester=semester,
             year=year,
-            user_id=user_id
+            user_id=current_user.student_id
         ).first()
 
         if existing_unit:
@@ -391,7 +353,7 @@ def add_unit():
             unit_code=unit_code,
             semester=semester,
             year=year,
-            user_id=user_id,
+            user_id=current_user.student_id,
             target_score=target_score,
             outline_url=None,
             summary=summary,
@@ -409,18 +371,14 @@ def add_unit():
         return redirect(url_for('track_grades'))
 
 @application.route("/api/update_unit", methods=["POST"])
+@login_required
 def update_unit():
-
-    if "user_id" not in session:
-        return redirect(url_for("homepage"))
-
     editUnitForm = EditUnitForm()
     if editUnitForm.validate_on_submit():
-        user_id = session["user_id"]
         unit_id = editUnitForm.unit_id.data  # Use unit_id from the form
         unit = Unit.query.get(unit_id)
 
-        if not unit or unit.user_id != user_id:
+        if not unit or unit.user_id != current_user.student_id:
             flash("Unauthorized or invalid unit.", "danger")
             return redirect(url_for("dashboard"))
 
@@ -452,60 +410,43 @@ def update_unit():
             for error in errors:
                 flash(f"Error in {field}: {error}", "danger")
 
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("track_grades"))
 
 
 @application.route('/api/logout', methods=["POST"])
 def logout():
-    session.pop("user_id", None)
+    logout_user()
     return redirect(url_for('homepage'))
 
 @application.route('/settings')
+@login_required
 def settings():
-    if "user_id" in session: 
-        user_id = session["user_id"]
-        # Query the database to get the complete user object
-        user = User.query.get(user_id)
-        # Check if user exists in database
-        if user:
-            return render_template('settings.html', user=user)
-        else:
-            # User ID in session but not found in database - clear session and redirect
-            session.pop("user_id", None)
-    return redirect(url_for('homepage'))
-
-
-
+    return render_template('settings.html', user=current_user)
 
 # --- Sharing page and create_share logic ---
 @application.route('/sharing', methods=['GET'])
+@login_required
 def sharing_page():
-    if "user_id" not in session:
-        return redirect(url_for('login'))
-    user_id = session["user_id"]
-    user = User.query.get(user_id)
     form = ShareForm()
     # Fetch share records
-    outgoing_shares = ShareAccess.query.filter_by(from_user=user.email).all()
-    incoming_shares = ShareAccess.query.filter_by(to_user=user.email).all()
-    return render_template('sharing.html', user=user, form=form,
+    outgoing_shares = ShareAccess.query.filter_by(from_user=current_user.email).all()
+    incoming_shares = ShareAccess.query.filter_by(to_user=current_user.email).all()
+    return render_template('sharing.html', user=current_user, form=form,
                            outgoing_shares=outgoing_shares,
                            incoming_shares=incoming_shares)
 
 @application.route('/create_share', methods=['POST'])
+@login_required
 def create_share():
-    if "user_id" not in session:
-        return redirect(url_for('login'))
     form = ShareForm()
     if form.validate_on_submit():
         email = form.email.data.strip().lower()
         expires_at = form.expires_at.data or (datetime.utcnow() + timedelta(days=180))
         token = secrets.token_urlsafe(16)
 
-        user = User.query.get(session["user_id"])
         new_share = ShareAccess(
             share_token=token,
-            from_user=user.email,
+            from_user=current_user.email,
             to_user=email,
             expires_at=expires_at
         )
