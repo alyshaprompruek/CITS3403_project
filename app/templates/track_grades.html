@@ -44,461 +44,275 @@
             height: 500px !important;
         }
     </style>
+
+    <!-- Chart.js + date adapter + annotation plugin -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-    <script>
-        let lineChart;
-        
-        function renderCharts(tasks) {
-            const lineCtx = document.getElementById("lineChart");
-            if (!lineCtx) {
-                return;
-            }
-            const ctx = lineCtx.getContext("2d");
-        
-            // Sort tasks by date
-            const sortedTasks = [...tasks].sort((a, b) => {
-                const dateA = new Date(a.date);
-                const dateB = new Date(b.date);
-                if (dateA.getTime() !== dateB.getTime()) {
-                    return dateA - dateB;
-                }
-                return 0;
-            });
-        
-            // Prepare data for the chart (filter out invalid scores and dates)
-            const lineData = sortedTasks
-                .filter(task => {
-                    const isValidGrade = task.grade !== null && !isNaN(Number(task.grade));
-                    const isValidDate = task.date && !isNaN(new Date(task.date).getTime());
-                    if (!isValidGrade || !isValidDate) {
-                        console.warn("Skipping task due to invalid grade or date:", task);
-                        return false;
-                    }
-                    return true;
-                })
-                .map(task => {
-                    return { x: task.date, y: Number(task.grade) };
-                });
-        
-            if (lineData.length === 0) {
-                return;
-            }
-        
-            // Define grade range for target zone
-            const gradeRangeMap = {
-                80: [80, 100],
-                70: [70, 80],
-                60: [60, 70],
-                50: [50, 60]
-            };
-        
-            const targetScore = 80;
-            const gradeRange = gradeRangeMap[targetScore] || null;
-        
-            const annotations = gradeRange ? {
-                targetZone: {
-                    type: 'box',
-                    yMin: gradeRange[0],
-                    yMax: gradeRange[1],
-                    backgroundColor: 'rgba(173, 223, 133, 0.34)',
-                    borderWidth: 0,
-                }
-            } : {};
-        
-            // Destroy existing chart if it exists
-            if (lineChart) lineChart.destroy();
-        
-            try {
-                lineChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        datasets: [{
-                            label: "Score Over Time",
-                            data: lineData,
-                            borderColor: '#4CAF50',
-                            backgroundColor: '#A5D6A7',
-                            fill: false,
-                            tension: 0.1,
-                            pointRadius: 5,
-                            pointHoverRadius: 7
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                labels: {
-                                    color: '#ffffff',
-                                    boxWidth: 12,
-                                    font: { weight: 'bold' }
-                                }
-                            },
-                            annotation: {
-                                annotations: annotations
-                            }
-                        },
-                        scales: {
-                            x: {
-                                type: 'time',
-                                time: {
-                                    unit: 'day',
-                                    tooltipFormat: 'MMM d, yyyy',
-                                    displayFormats: {
-                                        day: 'MMM d'
-                                    }
-                                },
-                                ticks: {
-                                    color: '#ffffff',
-                                    maxTicksLimit: 10
-                                },
-                                grid: {
-                                    color: 'rgba(255, 255, 255, 0.1)'
-                                }
-                            },
-                            y: {
-                                beginAtZero: true,
-                                max: 100,
-                                ticks: {
-                                    color: '#ffffff',
-                                    stepSize: 10
-                                },
-                                grid: {
-                                    color: 'rgba(255, 255, 255, 0.1)'
-                                }
-                            }
-                        },
-                        layout: {
-                            padding: {
-                                left: 20,
-                                right: 20,
-                                top: 20,
-                                bottom: 20
-                            }
-                        }
-                    },
-                    plugins: [{
-                        id: 'custom_canvas_background_color',
-                        beforeDraw: (chart) => {
-                            const ctx = chart.canvas.getContext('2d');
-                            ctx.save();
-                            ctx.globalCompositeOperation = 'destination-over';
-                            ctx.fillStyle = '#212529';
-                            ctx.fillRect(0, 0, chart.width, chart.height);
-                            ctx.restore();
-                        }
-                    }]
-                });
-            } catch (error) {
-            }
-        }
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1"></script>
 {% endblock %}
 
 {% block body %}
 <div class="container py-5">
-    
-
     <h2 class="text-center mb-4">Track Your Grades</h2>
 
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show m-3" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show m-3" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
     {% endwith %}
-    
+
     <div class="row">
-        <!-- Left Panel -->
-        <div class="col-md-4">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Units</h5>
+      <!-- Left Panel -->
+      <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Units</h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="p-3 d-flex flex-column">
+              {% for unit in sorted_units %}
+                <div class="d-flex align-items-center mb-2 px-1">
+                  <form method="POST" action="{{ url_for('track_grades') }}" class="flex-grow-1 me-1">
+                    <input type="hidden" name="unit_id" value="{{ unit.id }}">
+                    <button type="submit"
+                            class="btn btn-outline-primary btn-sm w-100 text-start
+                              {% if selected_unit and selected_unit.id == unit.id %}active{% endif %}">
+                      {{ unit.unit_code }} - {{ unit.year }} | Sem {{ unit.semester }}
+                    </button>
+                  </form>
+                  <form method="POST" action="{{ url_for('delete_unit') }}">
+                    <input type="hidden" name="unit_id" value="{{ unit.id }}">
+                    <button type="submit"
+                            class="btn btn-sm btn-outline-danger"
+                            onclick="return confirm('Are you sure you want to delete this unit?');">
+                      🗑️
+                    </button>
+                  </form>
                 </div>
-                <div class="card-body p-0">
-                    <!-- Unit selection buttons -->
-                    <div class="p-3 d-flex flex-column">
-                        {% for unit in sorted_units %}
-                          <div class="d-flex align-items-center mb-2 px-1">
-                            <form method="POST" action="{{ url_for('track_grades') }}" class="flex-grow-1 me-1">
-                              <input type="hidden" name="unit_id" value="{{ unit.id }}">
-                              <button type="submit" class="btn btn-outline-primary btn-sm w-100 text-start {% if selected_unit and selected_unit.id == unit.id %}active{% endif %}">
-                                {{ unit.unit_code }} - {{ unit.year }} | Sem {{ unit.semester }}
-                              </button>
-                            </form>
-                            <form method="POST" action="{{ url_for('delete_unit') }}">
-                              <input type="hidden" name="unit_id" value="{{ unit.id }}">
-                              <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this unit?');">
-                                🗑️
-                              </button>
-                            </form>
-                          </div>
-                        {% endfor %}
-                    </div>
-
-                    <div class="p-3 mt-3 border-top">
-                        <h4 class="mb-2">Add a New Unit:</h4>
-                        <form action="{{ url_for('add_unit') }}" method="post">
-                            {{ addUnitForm.csrf_token }}
-                            <div class="mb-3">
-                                {{ addUnitForm.name.label(class="form-label fw-medium") }}
-                                {{ addUnitForm.name(class="form-control", placeholder="Eg, Agile Web Dev")  }}
-                            </div>
-                            <div class="mb-3">
-                                {{ addUnitForm.unit_code.label(class="form-label fw-medium") }}
-                                {{ addUnitForm.unit_code(class="form-control", placeholder="Eg, CITS1000") }}
-                            </div>
-                            <div class="mb-3">
-                                {{ addUnitForm.semester.label(class="form-label fw-medium") }}
-                                {{ addUnitForm.semester(class="form-select") }}
-                            </div>
-                            <div class="mb-3">
-                                {{ addUnitForm.year.label(class="form-label fw-medium") }}
-                                {{ addUnitForm.year(class="form-select") }}
-                            </div>
-                            <div class="mb-3">
-                                {{ addUnitForm.target_score.label(class="form-label fw-medium") }}
-                                {{ addUnitForm.target_score(class="form-control", placeholder="Eg, 80") }}
-                            </div>
-                            <div class="d-grid">
-                                {{ addUnitForm.submit(class="btn btn-primary") }}
-                            </div>
-                        </form>
-                    </div>
-                </div>
+              {% endfor %}
             </div>
-        </div>
 
-        <!-- Right Panel -->
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">{{ selected_unit.name if selected_unit else 'Task Details' }}</h5>
+            <div class="p-3 mt-3 border-top">
+              <h4 class="mb-2">Add a New Unit:</h4>
+              <form action="{{ url_for('add_unit') }}" method="post">
+                {{ addUnitForm.csrf_token }}
+                <div class="mb-3">
+                  {{ addUnitForm.name.label(class="form-label fw-medium") }}
+                  {{ addUnitForm.name(class="form-control", placeholder="Eg, Agile Web Dev") }}
+                </div>
+                <div class="mb-3">
+                  {{ addUnitForm.unit_code.label(class="form-label fw-medium") }}
+                  {{ addUnitForm.unit_code(class="form-control", placeholder="Eg, CITS1000") }}
+                </div>
+                <div class="mb-3">
+                  {{ addUnitForm.semester.label(class="form-label fw-medium") }}
+                  {{ addUnitForm.semester(class="form-select") }}
+                </div>
+                <div class="mb-3">
+                  {{ addUnitForm.year.label(class="form-label fw-medium") }}
+                  {{ addUnitForm.year(class="form-select") }}
+                </div>
+                <div class="mb-3">
+                  {{ addUnitForm.target_score.label(class="form-label fw-medium") }}
+                  {{ addUnitForm.target_score(class="form-select") }}
+                </div>
+                <div class="d-grid">
+                  {{ addUnitForm.submit(class="btn btn-primary") }}
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel -->
+      <div class="col-md-8">
+        <div class="card shadow-sm">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">{{ selected_unit.name if selected_unit else 'Task Details' }}</h5>
+          </div>
+          <div class="card-body">
+            {% if not selected_unit %}
+              <div class="text-center py-5">
+                <h4 class="text-muted">No unit selected</h4>
+                <p>Please add a unit using the form on the left to get started.</p>
+              </div>
+            {% else %}
+              <!-- Unit Details -->
+              <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                  <h5 class="mb-0 text-secondary">Unit Details</h5>
+                  <button class="btn btn-sm btn-outline-secondary bg-body text-white"
+                          data-bs-toggle="modal"
+                          data-bs-target="#editUnitModal"
+                          data-unit-id="{{ selected_unit.id }}"
+                          data-unit-name="{{ selected_unit.name }}"
+                          data-unit-code="{{ selected_unit.unit_code }}"
+                          data-unit-year="{{ selected_unit.year }}"
+                          data-unit-semester="{{ selected_unit.semester }}"
+                          data-unit-target="{{ selected_unit.target_score }}">
+                    ✏️ Edit
+                  </button>
                 </div>
                 <div class="card-body">
-                    {% if not selected_unit %}
-                        <div class="text-center py-5">
-                            <h4 class="text-muted">No unit selected</h4>
-                            <p>Please add a unit using the form on the left to get started.</p>
-                        </div>
-                    {% else %}
-                        <!-- Unit Details Panel -->
-                        <div class="card mb-3">
-                          <div class="card-header d-flex justify-content-between align-items-center bg-light">
-                            <h5 class="mb-0 text-secondary">Unit Details</h5>
-                            <button class="btn btn-sm btn-outline-secondary bg-body text-white"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#editUnitModal"
-                                    data-unit-id="{{ selected_unit.id }}"
-                                    data-unit-name="{{ selected_unit.name }}"
-                                    data-unit-code="{{ selected_unit.unit_code }}"
-                                    data-unit-year="{{ selected_unit.year }}"
-                                    data-unit-semester="{{ selected_unit.semester }}"
-                                    data-unit-target="{{ selected_unit.target_score }}">
-                              ✏️ Edit
-                            </button>
-                          </div>
-                          <div class="card-body">
-                            <table class="table table-sm table-borderless mb-0">
-                              <tr>
-                                <th>Name:</th>
-                                <td>{{ selected_unit.name }}</td>
-                              </tr>
-                              <tr>
-                                <th>Code:</th>
-                                <td>{{ selected_unit.unit_code }}</td>
-                              </tr>
-                              <tr>
-                                <th>Year:</th>
-                                <td>{{ selected_unit.year }}</td>
-                              </tr>
-                              <tr>
-                                <th>Semester:</th>
-                                <td>{{ selected_unit.semester }}</td>
-                              </tr>
-                              <tr>
-                                <th>Target Score:</th>
-                                <td>{{ selected_unit.target_score }}</td>
-                              </tr>
-                            </table>
-                          </div>
-                        </div>
-                        <!-- Task Table -->
-                        {% if selected_unit.tasks %}
-                            <table class="table table-bordered table-hover">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Task Name</th>
-                                        <th>Score</th>
-                                        <th>Weight (%)</th>
-                                        <th>Date</th>
-                                        <th>Notes</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for task in selected_unit.tasks %}
-                                        <tr>
-                                            <td>{{ task.task_name or 'Unnamed' }}</td>
-                                            <td>{{ task.grade if task.grade is not none else '/' }}</td>
-                                            <td>{{ task.weighting }}</td>
-                                            <td>{{ task.date or '' }}</td>
-                                            <td>{{ task.notes or '' }}</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        {% else %}
-                            <div class="alert alert-info text-center">
-                                <p>No tasks added yet. Add one to get started.</p>
-                            </div>
-                        {% endif %}
-                        <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#taskModal">Add Task</button>
-
-                        <!-- Charts (only if data is present) -->
-                        {% if selected_unit and selected_unit.tasks and selected_unit.tasks | length > 0 %}
-                            <div id="charts" class="mt-4">
-                                <canvas id="lineChart"></canvas>
-                            </div>
-                            <script>
-                                const tasks = {{ serialized_tasks | tojson }};
-                                renderCharts(tasks);
-                            </script>
-                        {% endif %}
-
-                        <!-- AI Section -->
-                        {% if selected_unit %}
-                            <div id="aiSection" class="mt-4 p-3 border rounded shadow-sm">
-                                <h4 class="border-bottom pb-2 mb-3">AI Summary and Suggestions</h4>
-                                <div class="mb-3">
-                                    <h5 class="mb-2">Unit Overview</h5>
-                                    <p>{{ ai_summary }}</p>
-                                    <div class="mt-3">
-                                        {{ ai_suggestions | safe }}
-                                    </div>
-                                </div>
-                            </div>
-                        {% endif %}
-                    {% endif %}
+                  <table class="table table-sm table-borderless mb-0">
+                    <tr><th>Name:</th><td>{{ selected_unit.name }}</td></tr>
+                    <tr><th>Code:</th><td>{{ selected_unit.unit_code }}</td></tr>
+                    <tr><th>Year:</th><td>{{ selected_unit.year }}</td></tr>
+                    <tr><th>Semester:</th><td>{{ selected_unit.semester }}</td></tr>
+                    <tr><th>Target Score:</th><td>{{ selected_unit.target_score }}%</td></tr>
+                  </table>
                 </div>
-            </div>
+              </div>
+
+              <!-- Task Table -->
+              {% if selected_unit.tasks %}
+                <table class="table table-bordered table-hover">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Task Name</th><th>Score</th><th>Weight (%)</th><th>Date</th><th>Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for task in selected_unit.tasks %}
+                      <tr>
+                        <td>{{ task.task_name or 'Unnamed' }}</td>
+                        <td>{{ task.grade if task.grade is not none else '/' }}</td>
+                        <td>{{ task.weighting }}</td>
+                        <td>{{ task.date or '' }}</td>
+                        <td>{{ task.notes or '' }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              {% else %}
+                <div class="alert alert-info text-center">
+                  <p>No tasks added yet. Add one to get started.</p>
+                </div>
+              {% endif %}
+              <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#taskModal">
+                Add Task
+              </button>
+
+              <!-- Hidden container carrying our JSON data -->
+              <div id="chartData"
+                   data-tasks='{{ serialized_tasks|tojson|escapejs }}'
+                   data-target='{{ target_score }}'
+                   style="display:none;"></div>
+
+              <!-- Chart Canvas -->
+              {% if serialized_tasks and serialized_tasks|length > 0 %}
+                <div id="charts" class="mt-4">
+                  <canvas id="lineChart"></canvas>
+                </div>
+              {% endif %}
+
+              <!-- AI Section -->
+              <div id="aiSection" class="mt-4 p-3 border rounded shadow-sm">
+                <h4 class="border-bottom pb-2 mb-3">AI Summary and Suggestions</h4>
+                <div class="mb-3">
+                  <h5 class="mb-2">Unit Overview</h5>
+                  <p>{{ ai_summary }}</p>
+                  <div class="mt-3">
+                    {{ ai_suggestions|safe }}
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+          </div>
         </div>
-    </div>
-
-    <!-- Add Task Modal -->
-    <div class="modal fade" id="taskModal" tabindex="-1" aria-labelledby="taskModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <form action="{{ url_for('add_task') }}" method="post">
-          {{ addTaskForm.csrf_token }}
-          <div class="modal-content bg-dark text-white">
-            <div class="modal-header">
-              <h5 class="modal-title" id="taskModalLabel">Add New Task</h5>
-              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <input type="hidden" name="unit_id" value="{{ addTaskForm.unit_id.data }}">
-              <div class="form-group mb-3">
-                {{ addTaskForm.task_name.label(class="form-label") }}
-                {{ addTaskForm.task_name(class="form-control bg-dark text-white border-secondary", placeholder="Task Name") }}
-              </div>
-              <div class="form-group mb-3">
-                {{ addTaskForm.type.label(class="form-label") }}
-                {{ addTaskForm.type(class="form-select bg-dark text-white border-secondary") }}
-              </div>
-              <div class="form-group mb-3">
-                {{ addTaskForm.score.label(class="form-label") }}
-                {{ addTaskForm.score(class="form-control bg-dark text-white border-secondary", placeholder="Score (e.g., 85)") }}
-              </div>
-              <div class="form-group mb-3">
-                {{ addTaskForm.weight.label(class="form-label") }}
-                {{ addTaskForm.weight(class="form-control bg-dark text-white border-secondary", placeholder="Weight (e.g., 20)") }}
-              </div>
-              <div class="form-group mb-3">
-                {{ addTaskForm.date.label(class="form-label") }}
-                {{ addTaskForm.date(class="form-control bg-dark text-white border-secondary") }}
-              </div>
-              <div class="form-group mb-4">
-                {{ addTaskForm.note.label(class="form-label") }}
-                {{ addTaskForm.note(class="form-control bg-dark text-white border-secondary", placeholder="Notes (optional)") }}
-              </div>
-            </div>
-            <div class="modal-footer">
-              {{ addTaskForm.submit(class="btn btn-primary") }}
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Edit Unit Modal -->
-    <div class="modal fade" id="editUnitModal" tabindex="-1" aria-labelledby="editUnitModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <form method="POST" action="{{ url_for('update_unit') }}">
-          {{ editUnitForm.hidden_tag() }}
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="editUnitModalLabel">Edit Unit</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              {{ editUnitForm.unit_id(id="editUnitId") }}
-              <div class="mb-3">
-                <label for="editUnitName" class="form-label">{{ editUnitForm.name.label }}</label>
-                {{ editUnitForm.name(class="form-control", id="editUnitName") }}
-              </div>
-              <div class="mb-3">
-                <label for="editUnitCode" class="form-label">{{ editUnitForm.unit_code.label }}</label>
-                {{ editUnitForm.unit_code(class="form-control", id="editUnitCode") }}
-              </div>
-              <div class="mb-3">
-                <label for="editUnitYear" class="form-label">{{ editUnitForm.year.label }}</label>
-                {{ editUnitForm.year(class="form-select", id="editUnitYear") }}
-              </div>
-              <div class="mb-3">
-                <label for="editUnitSemester" class="form-label">{{ editUnitForm.semester.label }}</label>
-                {{ editUnitForm.semester(class="form-select", id="editUnitSemester") }}
-              </div>
-              <div class="mb-3">
-                <label for="editUnitTargetScore" class="form-label">{{ editUnitForm.target_score.label }}</label>
-                {{ editUnitForm.target_score(class="form-control", id="editUnitTargetScore") }}
-              </div>
-            </div>
-            <div class="modal-footer">
-              {{ editUnitForm.submit(class="btn btn-primary") }}
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            </div>
-          </div>
-        </form>
       </div>
     </div>
 </div>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const editModal = document.getElementById('editUnitModal');
-    if (editModal) {
-      editModal.addEventListener('show.bs.modal', function (event) {
-        const button = event.relatedTarget;
-        const unitId = button.getAttribute('data-unit-id');
-        const unitName = button.getAttribute('data-unit-name');
-        const unitCode = button.getAttribute('data-unit-code');
-        const unitYear = button.getAttribute('data-unit-year');
-        const unitSemester = button.getAttribute('data-unit-semester');
-        const unitTarget = button.getAttribute('data-unit-target');
 
-        document.querySelector('#editUnitModal input[name="unit_id"]').value = unitId;
-        document.getElementById('editUnitName').value = unitName;
-        document.getElementById('editUnitCode').value = unitCode;
-        document.getElementById('editUnitYear').value = unitYear;
-        document.getElementById('editUnitSemester').value = unitSemester;
-        document.getElementById('editUnitTargetScore').value = unitTarget;
-      });
-    }
-  });
-</script>
-{% endblock %}
+<!-- Add Task Modal -->
+<div class="modal fade" id="taskModal" tabindex="-1" aria-labelledby="taskModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form action="{{ url_for('add_task') }}" method="post">
+      {{ addTaskForm.csrf_token }}
+      <div class="modal-content bg-dark text-white">
+        <div class="modal-header">
+          <h5 class="modal-title" id="taskModalLabel">Add New Task</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="unit_id" value="{{ addTaskForm.unit_id.data }}">
+          <div class="form-group mb-3">
+            {{ addTaskForm.task_name.label(class="form-label") }}
+            {{ addTaskForm.task_name(class="form-control bg-dark text-white border-secondary", placeholder="Task Name") }}
+          </div>
+          <div class="form-group mb-3">
+            {{ addTaskForm.type.label(class="form-label") }}
+            {{ addTaskForm.type(class="form-select bg-dark text-white border-secondary") }}
+          </div>
+          <div class="form-group mb-3">
+            {{ addTaskForm.score.label(class="form-label") }}
+            {{ addTaskForm.score(class="form-control bg-dark text-white border-secondary", placeholder="Score (e.g., 85)") }}
+          </div>
+          <div class="form-group mb-3">
+            {{ addTaskForm.weight.label(class="form-label") }}
+            {{ addTaskForm.weight(class="form-control bg-dark text-white border-secondary", placeholder="Weight (e.g., 20)") }}
+          </div>
+          <div class="form-group mb-3">
+            {{ addTaskForm.date.label(class="form-label") }}
+            {{ addTaskForm.date(class="form-control bg-dark text-white border-secondary") }}
+          </div>
+          <div class="form-group mb-4">
+            {{ addTaskForm.note.label(class="form-label") }}
+            {{ addTaskForm.note(class="form-control bg-dark text-white border-secondary", placeholder="Notes (optional)") }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          {{ addTaskForm.submit(class="btn btn-primary") }}
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Unit Modal -->
+<div class="modal fade" id="editUnitModal" tabindex="-1" aria-labelledby="editUnitModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('update_unit') }}">
+      {{ editUnitForm.hidden_tag() }}
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editUnitModalLabel">Edit Unit</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          {{ editUnitForm.unit_id(id="editUnitId") }}
+          <div class="mb-3">
+            <label for="editUnitName" class="form-label">{{ editUnitForm.name.label }}</label>
+            {{ editUnitForm.name(class="form-control", id="editUnitName") }}
+          </div>
+          <div class="mb-3">
+            <label for="editUnitCode" class="form-label">{{ editUnitForm.unit_code.label }}</label>
+            {{ editUnitForm.unit_code(class="form-control", id="editUnitCode") }}
+          </div>
+          <div class="mb-3">
+            <label for="editUnitYear" class="form-label">{{ editUnitForm.year.label }}</label>
+            {{ editUnitForm.year(class="form-select", id="editUnitYear") }}
+          </div>
+          <div class="mb-3">
+            <label for="editUnitSemester" class="form-label">{{ editUnitForm.semester.label }}</label>
+            {{ editUnitForm.semester(class="form-select", id="editUnitSemester") }}
+          </div>
+          <div class="mb-3">
+            <label for="editUnitTargetScore" class="form-label">{{ editUnitForm.target_score.label }}</label>
+            {{ editUnitForm.target_score(class="form-select", id="editUnitTargetScore") }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          {{ editUnitForm.submit(class="btn btn-primary") }}
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </form>
