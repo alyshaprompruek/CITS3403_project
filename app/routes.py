@@ -86,7 +86,7 @@ def signup():
                 error = f"An error occurred during registration: {e}"
 
         else:
-            error = "Please fix the errors below and try again."
+            error = "Please check your information and try again."
 
         return render_template('signup.html', form=form, error=error)
 
