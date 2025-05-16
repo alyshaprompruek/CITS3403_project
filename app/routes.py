@@ -23,15 +23,20 @@ def view_shared_dashboard(token):
     share = ShareAccess.query.filter_by(share_token=token).first()
 
     if not share or share.to_user != current_user.email:
-        flash("You do not have permission to view this shared dashboard.", "danger")
+        flash("You do not have permission to view this shared dashboard, here is your own dashboard.", "danger")
+        return redirect(url_for("dashboard"))
+
+    #Check its not expired
+    if share.expires_at < datetime.utcnow():
+        flash("This shared dashboard link has expired, here is your own dashboard.", "danger")
         return redirect(url_for("dashboard"))
 
     shared_user = User.query.filter_by(email=share.from_user).first()
     if not shared_user:
-        flash("The original shared user no longer exists.", "danger")
+        flash("The original shared user no longer exists, here is your own dashboard.", "danger")
         return redirect(url_for("dashboard"))
 
-    stats = calculate_user_statistics(shared_user.student_id)
+    stats = calculate_user_statistics(shared_user)
     editUnitForm = AddUnitForm()
 
     return render_template(
@@ -444,14 +449,31 @@ def create_share():
     form = ShareForm()
     if form.validate_on_submit():
         email = form.email.data.strip().lower()
-        expires_at = form.expires_at.data or (datetime.utcnow() + timedelta(days=180))
+        expires_at = form.expires_at.data #is just date not datetime
+
+        # Ensure the recipient email is not the same as the current user's email
+        if email == current_user.email:
+            flash("You cannot share with yourself.", "danger")
+            return redirect(url_for('sharing_page'))
+
+        # Confirm that the email exists in the User table
+        recipient_user = User.query.filter_by(email=email).first()
+        if not recipient_user:
+            flash("The specified email does not belong to a registered user.", "danger")
+            return redirect(url_for('sharing_page'))
+        
+        # Check if the expiry date is in the past
+        if expires_at < datetime.utcnow().date():
+            flash("The expiry date cannot be in the past.", "danger")
+            return redirect(url_for('sharing_page'))
+        
         token = secrets.token_urlsafe(16)
 
         new_share = ShareAccess(
             share_token=token,
             from_user=current_user.email,
-            to_user=email,
-            expires_at=expires_at
+            to_user=email, 
+            expires_at=expires_at #sqlite will convert to datetime object at midnight
         )
 
         db.session.add(new_share)
