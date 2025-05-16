@@ -266,6 +266,8 @@ def delete_unit():
 
     if unit and unit.user_id == current_user.student_id:
         try:
+            # Delete related ShareAccess entries first
+            ShareAccess.query.filter_by(unit_selection=unit_id).delete()
             db.session.delete(unit)
             db.session.commit()
             flash("Unit and associated tasks deleted successfully.", "success")
