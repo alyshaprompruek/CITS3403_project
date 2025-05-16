@@ -44,7 +44,6 @@ pip install -r requirements.txt
 ```
 
 ## Run the Flask app
-git ad
 ```bash
 python3 app.py
 ```
