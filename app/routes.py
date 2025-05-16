@@ -281,7 +281,7 @@ def delete_unit():
         try:
             db.session.delete(unit)
             db.session.commit()
-            flash("Unit deleted successfully.", "success")
+            flash("Unit and associated tasks deleted successfully.", "success")
         except Exception as e:
             db.session.rollback()
             flash(f"Failed to delete unit: {str(e)}", "danger")
