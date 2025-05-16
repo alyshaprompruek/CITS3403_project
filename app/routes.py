@@ -272,9 +272,14 @@ def delete_unit():
         flash("You must be logged in to delete a unit.", "danger")
         return redirect(url_for("homepage"))
 
-    unit_id = request.form.get("unit_id")
-    unit = Unit.query.get(unit_id)
+    unit_id_str = request.form.get("unit_id", "")
+    try:
+        unit_id = int(unit_id_str)
+    except ValueError:
+        flash("Invalid unit specified.", "danger")
+        return redirect(url_for("track_grades"))
 
+    unit = Unit.query.get(unit_id)
     if unit and unit.user_id == session["user_id"]:
         try:
             db.session.delete(unit)
@@ -282,7 +287,7 @@ def delete_unit():
             flash("Unit deleted successfully.", "success")
         except Exception as e:
             db.session.rollback()
-            flash(f"Failed to delete unit: {str(e)}", "danger")
+            flash(f"Failed to delete unit: {e}", "danger")
     else:
         flash("Unauthorized or invalid unit.", "danger")
 
