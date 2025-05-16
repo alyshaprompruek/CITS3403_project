@@ -52,7 +52,10 @@ python3 app.py
 
 To run the unit tests, use the following command:
 
+
+
+
 ```bash
-pytest tests/unit/
+PYTHONPATH=. pytest tests/unit/
 ```
 
