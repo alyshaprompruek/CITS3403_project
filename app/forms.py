@@ -28,6 +28,7 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Log In')
 
 class AddUnitForm(FlaskForm):
+    unit_id = HiddenField('Unit ID')  # Required for sharing
     name = StringField('Unit Name', validators=[DataRequired(), Length(max=120)])
     unit_code = StringField('Unit Code', validators=[DataRequired(), Length(max=20)])
     semester = SelectField('Semester', choices=[('1', '1'), ('2', '2')], validators=[DataRequired()])
